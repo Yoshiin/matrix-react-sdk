@@ -31,7 +31,7 @@
   "typings": "./lib/index.d.ts",
   "matrix_src_main": "./src/index.js",
   "scripts": {
-    "prepare": "yarn build",
+    "prepare": "npm run snyk-protect && yarn build",
     "i18n": "matrix-gen-i18n",
     "prunei18n": "matrix-prune-i18n",
     "diff-i18n": "cp src/i18n/strings/en_EN.json src/i18n/strings/en_EN_orig.json && ./scripts/gen-i18n.js && node scripts/compare-file.js src/i18n/strings/en_EN_orig.json src/i18n/strings/en_EN.json",
@@ -51,7 +51,8 @@
     "lint:types": "tsc --noEmit",
     "lint:style": "stylelint 'res/css/**/*.scss'",
     "test": "jest",
-    "test:e2e": "./test/end-to-end-tests/run.sh --riot-url http://localhost:8080"
+    "test:e2e": "./test/end-to-end-tests/run.sh --riot-url http://localhost:8080",
+    "snyk-protect": "snyk protect"
   },
   "dependencies": {
     "@babel/runtime": "^7.8.3",
@@ -100,7 +101,8 @@
     "url": "^0.11.0",
     "velocity-animate": "^1.5.2",
     "what-input": "^5.2.6",
-    "zxcvbn": "^4.4.2"
+    "zxcvbn": "^4.4.2",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.7.5",
@@ -165,5 +167,6 @@
     "transformIgnorePatterns": [
       "/node_modules/(?!matrix-js-sdk).+$"
     ]
-  }
+  },
+  "snyk": true
 }
