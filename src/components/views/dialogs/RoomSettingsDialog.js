@@ -19,16 +19,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TabbedView, {Tab} from "../../structures/TabbedView";
 import {_t, _td} from "../../../languageHandler";
-import AdvancedRoomSettingsTab from "../settings/tabs/room/AdvancedRoomSettingsTab";
 import RolesRoomSettingsTab from "../settings/tabs/room/RolesRoomSettingsTab";
 import GeneralRoomSettingsTab from "../settings/tabs/room/GeneralRoomSettingsTab";
-import SecurityRoomSettingsTab from "../settings/tabs/room/SecurityRoomSettingsTab";
-import NotificationSettingsTab from "../settings/tabs/room/NotificationSettingsTab";
-import BridgeSettingsTab from "../settings/tabs/room/BridgeSettingsTab";
 import * as sdk from "../../../index";
 import {MatrixClientPeg} from "../../../MatrixClientPeg";
 import dis from "../../../dispatcher";
-import SettingsStore from "../../../settings/SettingsStore";
 
 export default class RoomSettingsDialog extends React.Component {
     static propTypes = {
@@ -61,33 +56,9 @@ export default class RoomSettingsDialog extends React.Component {
             <GeneralRoomSettingsTab roomId={this.props.roomId} />,
         ));
         tabs.push(new Tab(
-            _td("Security & Privacy"),
-            "mx_RoomSettingsDialog_securityIcon",
-            <SecurityRoomSettingsTab roomId={this.props.roomId} />,
-        ));
-        tabs.push(new Tab(
             _td("Roles & Permissions"),
             "mx_RoomSettingsDialog_rolesIcon",
             <RolesRoomSettingsTab roomId={this.props.roomId} />,
-        ));
-        tabs.push(new Tab(
-            _td("Notifications"),
-            "mx_RoomSettingsDialog_notificationsIcon",
-            <NotificationSettingsTab roomId={this.props.roomId} />,
-        ));
-
-        if (SettingsStore.isFeatureEnabled("feature_bridge_state")) {
-            tabs.push(new Tab(
-                _td("Bridges"),
-                "mx_RoomSettingsDialog_bridgesIcon",
-                <BridgeSettingsTab roomId={this.props.roomId} />,
-            ));
-        }
-
-        tabs.push(new Tab(
-            _td("Advanced"),
-            "mx_RoomSettingsDialog_warningIcon",
-            <AdvancedRoomSettingsTab roomId={this.props.roomId} closeSettingsFn={this.props.onFinished} />,
         ));
 
         return tabs;

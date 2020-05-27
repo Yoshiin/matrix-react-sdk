@@ -40,6 +40,33 @@ export default class GeneralRoomSettingsTab extends React.Component {
         };
     }
 
+    componentDidMount() {
+        this.context.getRoomDirectoryVisibility(this.props.roomId).then((result => {
+            this.setState({isRoomPublished: result.visibility === 'public'});
+        }));
+    }
+
+    _onRoomPublishChange = () => {
+        const client = this.context;
+        const room = client.getRoom(this.props.roomId);
+        const self = this;
+        const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
+
+        Modal.createTrackedDialog('Remove this room from the rooms directory', '', QuestionDialog, {
+            title: _t('Remove this room from the rooms directory'),
+            description: ( _t('This action is irreversible.') + " " + _t('Are you sure you want to remove this room from the rooms directory?')),
+            onFinished: (confirm) => {
+                if (confirm) {
+                    client.sendStateEvent(room.roomId, "m.room.encryption", { algorithm: "m.megolm.v1.aes-sha2" });
+                    client.sendStateEvent(room.roomId, "m.room.join_rules", {join_rule: "invite"}, "");
+                    client.sendStateEvent(room.roomId, "m.room.history_visibility", {history_visibility: "invited"}, "");
+                    client.setRoomDirectoryVisibility(room.roomId, 'private').done();
+                    self.setState({isRoomPublished: false});
+                }
+            },
+        });
+    };
+
     _onLeaveClick = () => {
         const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
         const client = this.context;
@@ -69,20 +96,25 @@ export default class GeneralRoomSettingsTab extends React.Component {
     };
 
     render() {
-        const AliasSettings = sdk.getComponent("room_settings.AliasSettings");
-        const RelatedGroupSettings = sdk.getComponent("room_settings.RelatedGroupSettings");
         const UrlPreviewSettings = sdk.getComponent("room_settings.UrlPreviewSettings");
 
         const client = this.context;
         const room = client.getRoom(this.props.roomId);
+        const isCurrentUserAdmin = room.getMember(client.getUserId()).powerLevelNorm >= 100;
 
-        const canSetAliases = true; // Previously, we arbitrarily only allowed admins to do this
-        const canSetCanonical = room.currentState.mayClientSendStateEvent("m.room.canonical_alias", client);
-        const canonicalAliasEv = room.currentState.getStateEvents("m.room.canonical_alias", '');
-        const aliasEvents = room.currentState.getStateEvents("m.room.aliases");
-
-        const canChangeGroups = room.currentState.mayClientSendStateEvent("m.room.related_groups", client);
-        const groupsEvent = room.currentState.getStateEvents("m.room.related_groups", "");
+        let roomPublishChange = null;
+        if (isCurrentUserAdmin && this.state.isRoomPublished) {
+            roomPublishChange = (
+                <div>
+                    <span className='mx_SettingsTab_subheading'>{_t('Remove this room from the rooms directory')}</span>
+                    <div className='mx_SettingsTab_section'>
+                        <AccessibleButton kind='primary' onClick={this._onRoomPublishChange}>
+                            {_t('Remove this room from the rooms directory')}
+                        </AccessibleButton>
+                    </div>
+                </div>
+            );
+        }
 
         return (
             <div className="mx_SettingsTab mx_GeneralRoomSettingsTab">
@@ -90,20 +122,8 @@ export default class GeneralRoomSettingsTab extends React.Component {
                 <div className='mx_SettingsTab_section mx_GeneralRoomSettingsTab_profileSection'>
                     <RoomProfileSettings roomId={this.props.roomId} />
                 </div>
-
-                <div className="mx_SettingsTab_heading">{_t("Room Addresses")}</div>
-                <div className='mx_SettingsTab_section mx_SettingsTab_subsectionText'>
-                    <AliasSettings roomId={this.props.roomId}
-                                   canSetCanonicalAlias={canSetCanonical} canSetAliases={canSetAliases}
-                                   canonicalAliasEvent={canonicalAliasEv} aliasEvents={aliasEvents} />
-                </div>
                 <div className="mx_SettingsTab_heading">{_t("Other")}</div>
-                <span className='mx_SettingsTab_subheading'>{_t("Flair")}</span>
-                <div className='mx_SettingsTab_section mx_SettingsTab_subsectionText'>
-                    <RelatedGroupSettings roomId={room.roomId}
-                                          canSetRelatedGroups={canChangeGroups}
-                                          relatedGroupsEvent={groupsEvent} />
-                </div>
+                { roomPublishChange }
 
                 <span className='mx_SettingsTab_subheading'>{_t("URL Previews")}</span>
                 <div className='mx_SettingsTab_section'>
