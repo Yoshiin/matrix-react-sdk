@@ -59,25 +59,6 @@ export default class TopLeftMenu extends React.Component {
     }
 
     render() {
-        const isGuest = MatrixClientPeg.get().isGuest();
-
-        const hostingSignupLink = getHostingLink('user-context-menu');
-        let hostingSignup = null;
-        if (hostingSignupLink) {
-            hostingSignup = <div className="mx_TopLeftMenu_upgradeLink">
-                {_t(
-                    "<a>Upgrade</a> to your own domain", {},
-                    {
-                        a: sub =>
-                            <a href={hostingSignupLink} target="_blank" rel="noreferrer noopener" tabIndex={-1}>{sub}</a>,
-                    },
-                )}
-                <a href={hostingSignupLink} target="_blank" rel="noreferrer noopener" role="presentation" aria-hidden={true} tabIndex={-1}>
-                    <img src={require("../../../../res/img/external-link.svg")} width="11" height="10" alt='' />
-                </a>
-            </div>;
-        }
-
         let homePageItem = null;
         if (this.hasHomePage()) {
             homePageItem = (
@@ -86,25 +67,9 @@ export default class TopLeftMenu extends React.Component {
                 </MenuItem>
             );
         }
-
-        let signInOutItem;
-        if (isGuest) {
-            signInOutItem = (
-                <MenuItem className="mx_TopLeftMenu_icon_signin" onClick={this.signIn}>
-                    {_t("Sign in")}
-                </MenuItem>
-            );
-        } else {
-            signInOutItem = (
-                <MenuItem className="mx_TopLeftMenu_icon_signout" onClick={this.signOut}>
-                    {_t("Sign out")}
-                </MenuItem>
-            );
-        }
-
-        const helpItem = (
-            <MenuItem className="mx_TopLeftMenu_icon_help" onClick={this.openHelp}>
-                {_t("Help")}
+        const signInOutItem = (
+            <MenuItem className="mx_TopLeftMenu_icon_signout" onClick={this.signOut}>
+                {_t("Sign out")}
             </MenuItem>
         );
 
@@ -117,23 +82,14 @@ export default class TopLeftMenu extends React.Component {
         return <div className="mx_TopLeftMenu" ref={this.props.containerRef} role="menu">
             <div className="mx_TopLeftMenu_section_noIcon" aria-readonly={true} tabIndex={-1}>
                 <div>{this.props.displayName}</div>
-                <div className="mx_TopLeftMenu_greyedText" aria-hidden={true}>{this.props.userId}</div>
-                {hostingSignup}
             </div>
             <ul className="mx_TopLeftMenu_section_withIcon" role="none">
                 {homePageItem}
                 {settingsItem}
-                {helpItem}
                 {signInOutItem}
             </ul>
         </div>;
     }
-
-    openHelp = () => {
-        this.closeMenu();
-        const RedesignFeedbackDialog = sdk.getComponent("views.dialogs.RedesignFeedbackDialog");
-        Modal.createTrackedDialog('Report bugs & give feedback', '', RedesignFeedbackDialog);
-    };
 
     viewHomePage() {
         dis.dispatch({action: 'view_home_page'});

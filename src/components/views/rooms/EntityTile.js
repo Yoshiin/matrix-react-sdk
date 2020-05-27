@@ -81,13 +81,14 @@ const EntityTile = createReactClass({
             presenceLastTs: 0,
             showInviteButton: false,
             suppressOnHover: false,
-            showPresence: true,
+            showPresence: false,
         };
     },
 
     getInitialState: function() {
         return {
             hover: false,
+            entityTileNameClass: "mx_EntityTile_name",
         };
     },
 
@@ -103,6 +104,7 @@ const EntityTile = createReactClass({
         };
         if (this.props.className) mainClassNames[this.props.className] = true;
 
+        const entityTileNameClass = this.props.userExpired ? "mx_EntityTile_name mx_EntityTile_name_expired" : "mx_EntityTile_name"
         const presenceClass = presenceClassForMember(
             this.props.presenceState, this.props.presenceLastActiveAgo, this.props.showPresence,
         );
@@ -111,32 +113,10 @@ const EntityTile = createReactClass({
         let nameEl;
         const {name} = this.props;
 
-        if (!this.props.suppressOnHover) {
-            const activeAgo = this.props.presenceLastActiveAgo ?
-                (Date.now() - (this.props.presenceLastTs - this.props.presenceLastActiveAgo)) : -1;
-
-            const PresenceLabel = sdk.getComponent("rooms.PresenceLabel");
-            let presenceLabel = null;
-            if (this.props.showPresence) {
-                presenceLabel = <PresenceLabel activeAgo={activeAgo}
-                    currentlyActive={this.props.presenceCurrentlyActive}
-                    presenceState={this.props.presenceState} />;
-            }
-            if (this.props.subtextLabel) {
-                presenceLabel = <span className="mx_EntityTile_subtext">{this.props.subtextLabel}</span>;
-            }
+        if (this.props.subtextLabel) {
             nameEl = (
                 <div className="mx_EntityTile_details">
-                    <div className="mx_EntityTile_name" dir="auto">
-                        { name }
-                    </div>
-                    {presenceLabel}
-                </div>
-            );
-        } else if (this.props.subtextLabel) {
-            nameEl = (
-                <div className="mx_EntityTile_details">
-                    <div className="mx_EntityTile_name" dir="auto">
+                    <div className={entityTileNameClass} dir="auto">
                         {name}
                     </div>
                     <span className="mx_EntityTile_subtext">{this.props.subtextLabel}</span>
@@ -144,7 +124,7 @@ const EntityTile = createReactClass({
             );
         } else {
             nameEl = (
-                <div className="mx_EntityTile_name" dir="auto">{ name }</div>
+                <div className={entityTileNameClass} dir="auto">{ name }</div>
             );
         }
 

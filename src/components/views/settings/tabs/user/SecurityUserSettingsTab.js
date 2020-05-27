@@ -284,6 +284,12 @@ export default class SecurityUserSettingsTab extends React.Component {
         return (
             <div className="mx_SettingsTab mx_SecurityUserSettingsTab">
                 <div className="mx_SettingsTab_heading">{_t("Security & Privacy")}</div>
+                {keyBackup}
+                {eventIndex}
+                {crossSigning}
+                {this._renderCurrentDeviceInfo()}
+                {this._renderIgnoredUsers()}
+                {this._renderManageInvites()}
                 <div className="mx_SettingsTab_section">
                     <span className="mx_SettingsTab_subheading">{_t("Sessions")}</span>
                     <div className='mx_SettingsTab_subsectionText'>
@@ -291,26 +297,6 @@ export default class SecurityUserSettingsTab extends React.Component {
                         <DevicesPanel />
                     </div>
                 </div>
-                {keyBackup}
-                {eventIndex}
-                {crossSigning}
-                {this._renderCurrentDeviceInfo()}
-                <div className='mx_SettingsTab_section'>
-                    <span className="mx_SettingsTab_subheading">{_t("Analytics")}</span>
-                    <div className='mx_SettingsTab_subsectionText'>
-                        {_t("Riot collects anonymous analytics to allow us to improve the application.")}
-                        &nbsp;
-                        {_t("Privacy is important to us, so we don't collect any personal or " +
-                            "identifiable data for our analytics.")}
-                        <AccessibleButton className="mx_SettingsTab_linkBtn" onClick={Analytics.showDetailsModal}>
-                            {_t("Learn more about how we use analytics.")}
-                        </AccessibleButton>
-                    </div>
-                    <SettingsFlag name='analyticsOptIn' level={SettingLevel.DEVICE}
-                                  onChange={this._updateAnalytics} />
-                </div>
-                {this._renderIgnoredUsers()}
-                {this._renderManageInvites()}
             </div>
         );
     }

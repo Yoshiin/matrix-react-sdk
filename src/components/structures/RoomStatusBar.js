@@ -336,16 +336,7 @@ export default createReactClass({
         if (this.props.sentMessageAndIsAlone && !this.props.isPeeking) {
             return (
                 <div className="mx_RoomStatusBar_isAlone">
-                    { _t("There's no one else here! Would you like to <inviteText>invite others</inviteText> " +
-                            "or <nowarnText>stop warning about the empty room</nowarnText>?",
-                        {},
-                        {
-                            'inviteText': (sub) =>
-                                <a className="mx_RoomStatusBar_resend_link" key="invite" onClick={this.props.onInviteClick}>{ sub }</a>,
-                            'nowarnText': (sub) =>
-                                <a className="mx_RoomStatusBar_resend_link" key="nowarn" onClick={this.props.onStopWarningClick}>{ sub }</a>,
-                        },
-                    ) }
+                    { _t("There's no one else here!") }
                 </div>
             );
         }

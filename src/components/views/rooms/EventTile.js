@@ -730,7 +730,7 @@ export default createReactClass({
         }
 
         const MessageActionBar = sdk.getComponent('messages.MessageActionBar');
-        const actionBar = !isEditing ? <MessageActionBar
+        const actionBar = !isEditing && (!("state_key" in this.props.mxEvent.event)) ? <MessageActionBar
             mxEvent={this.props.mxEvent}
             reactions={this.state.reactions}
             permalinkCreator={this.props.permalinkCreator}

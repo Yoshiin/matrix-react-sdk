@@ -24,33 +24,6 @@ import {RoomPermalinkCreator, makeGroupPermalink, makeUserPermalink} from "../..
 import * as ContextMenu from "../../structures/ContextMenu";
 import {toRightOf} from "../../structures/ContextMenu";
 
-const socials = [
-    {
-        name: 'Facebook',
-        img: require("../../../../res/img/social/facebook.png"),
-        url: (url) => `https://www.facebook.com/sharer/sharer.php?u=${url}`,
-    }, {
-        name: 'Twitter',
-        img: require("../../../../res/img/social/twitter-2.png"),
-        url: (url) => `https://twitter.com/home?status=${url}`,
-    }, /* // icon missing
-        name: 'Google Plus',
-        img: 'img/social/',
-        url: (url) => `https://plus.google.com/share?url=${url}`,
-    },*/ {
-        name: 'LinkedIn',
-        img: require("../../../../res/img/social/linkedin.png"),
-        url: (url) => `https://www.linkedin.com/shareArticle?mini=true&url=${url}`,
-    }, {
-        name: 'Reddit',
-        img: require("../../../../res/img/social/reddit.png"),
-        url: (url) => `http://www.reddit.com/submit?url=${url}`,
-    }, {
-        name: 'email',
-        img: require("../../../../res/img/social/email-1.png"),
-        url: (url) => `mailto:?body=${url}`,
-    },
-];
 
 export default class ShareDialog extends React.Component {
     static propTypes = {
@@ -136,6 +109,11 @@ export default class ShareDialog extends React.Component {
     }
 
     render() {
+
+
+        console.error("this.props.target");
+        console.error(this.props.target);
+
         let title;
         let matrixToUrl;
 
@@ -188,6 +166,7 @@ export default class ShareDialog extends React.Component {
         }
 
         const encodedUrl = encodeURIComponent(matrixToUrl);
+        const emailParams = `mailto:?body=${encodedUrl}&subject=[Tchap] Partage du salon "${this.props.target.name}"`;
 
         const BaseDialog = sdk.getComponent('views.dialogs.BaseDialog');
         return <BaseDialog title={title}
@@ -210,26 +189,29 @@ export default class ShareDialog extends React.Component {
                     </a>
                 </div>
                 { checkbox }
-                <hr />
+                <br />
 
-                <div className="mx_ShareDialog_split">
-                    <div className="mx_ShareDialog_qrcode_container">
-                        <QRCode value={matrixToUrl} size={256} logoWidth={48} logo={require("../../../../res/img/matrix-m.svg")} />
-                    </div>
-                    <div className="mx_ShareDialog_social_container">
-                        {
-                            socials.map((social) => <a rel="noreferrer noopener"
-                                                       target="_blank"
-                                                       key={social.name}
-                                                       name={social.name}
-                                                       href={social.url(encodedUrl)}
-                                                       className="mx_ShareDialog_social_icon"
-                            >
-                                <img src={social.img} alt={social.name} height={64} width={64} />
-                            </a>)
-                        }
-                    </div>
-                </div>
+                <details>
+                    <summary>{_t("Share")}</summary>
+                    <p>
+                        <div className="mx_ShareDialog_split">
+                            <div className="mx_ShareDialog_qrcode_container">
+                                <QRCode value={matrixToUrl} size={256} logoWidth={48} logo={require("../../../../res/img/matrix-m.svg")} />
+                            </div>
+                            <div className="mx_ShareDialog_social_container">
+                                <a rel="noreferrer noopener"
+                                   target="_blank"
+                                   key="email"
+                                   name="email"
+                                   href={emailParams}
+                                   className="mx_ShareDialog_social_icon"
+                                >
+                                    <img src={require("../../../../res/img/social/email-1.png")} alt="email" height={64} width={64} />
+                                </a>
+                            </div>
+                        </div>
+                    </p>
+                </details>
             </div>
         </BaseDialog>;
     }

@@ -464,67 +464,6 @@ export default createReactClass({
         }
     },
 
-    renderServerComponent() {
-        const ServerTypeSelector = sdk.getComponent("auth.ServerTypeSelector");
-        const ServerConfig = sdk.getComponent("auth.ServerConfig");
-        const ModularServerConfig = sdk.getComponent("auth.ModularServerConfig");
-
-        if (SdkConfig.get()['disable_custom_urls']) {
-            return null;
-        }
-
-        // If we're on a different phase, we only show the server type selector,
-        // which is always shown if we allow custom URLs at all.
-        // (if there's a fatal server error, we need to show the full server
-        // config as the user may need to change servers to resolve the error).
-        if (PHASES_ENABLED && this.state.phase !== PHASE_SERVER_DETAILS && !this.state.serverErrorIsFatal) {
-            return <div>
-                <ServerTypeSelector
-                    selected={this.state.serverType}
-                    onChange={this.onServerTypeChange}
-                />
-            </div>;
-        }
-
-        const serverDetailsProps = {};
-        if (PHASES_ENABLED) {
-            serverDetailsProps.onAfterSubmit = this.onServerDetailsNextPhaseClick;
-            serverDetailsProps.submitText = _t("Next");
-            serverDetailsProps.submitClass = "mx_Login_submit";
-        }
-
-        let serverDetails = null;
-        switch (this.state.serverType) {
-            case ServerType.FREE:
-                break;
-            case ServerType.PREMIUM:
-                serverDetails = <ModularServerConfig
-                    serverConfig={this.props.serverConfig}
-                    onServerConfigChange={this.props.onServerConfigChange}
-                    delayTimeMs={250}
-                    {...serverDetailsProps}
-                />;
-                break;
-            case ServerType.ADVANCED:
-                serverDetails = <ServerConfig
-                    serverConfig={this.props.serverConfig}
-                    onServerConfigChange={this.props.onServerConfigChange}
-                    delayTimeMs={250}
-                    showIdentityServerIfRequiredByHomeserver={true}
-                    {...serverDetailsProps}
-                />;
-                break;
-        }
-
-        return <div>
-            <ServerTypeSelector
-                selected={this.state.serverType}
-                onChange={this.onServerTypeChange}
-            />
-            {serverDetails}
-        </div>;
-    },
-
     renderRegisterComponent() {
         if (PHASES_ENABLED && this.state.phase !== PHASE_REGISTRATION) {
             return null;
@@ -661,7 +600,6 @@ export default createReactClass({
                 <h2>{ _t('Create your account') }</h2>
                 { errorText }
                 { serverDeadSection }
-                { this.renderServerComponent() }
                 { this.renderRegisterComponent() }
                 { goBack }
                 { signIn }

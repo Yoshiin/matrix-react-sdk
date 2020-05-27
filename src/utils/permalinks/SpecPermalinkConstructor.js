@@ -28,11 +28,11 @@ export default class SpecPermalinkConstructor extends PermalinkConstructor {
     }
 
     forEvent(roomId: string, eventId: string, serverCandidates: string[]): string {
-        return `${baseUrl}/#/${roomId}/${eventId}${this.encodeServerCandidates(serverCandidates)}`;
+        return `${baseUrl}/#/${roomId}/${eventId}`;
     }
 
     forRoom(roomIdOrAlias: string, serverCandidates: string[]): string {
-        return `${baseUrl}/#/${roomIdOrAlias}${this.encodeServerCandidates(serverCandidates)}`;
+        return `${baseUrl}/#/${roomIdOrAlias}`;
     }
 
     forUser(userId: string): string {

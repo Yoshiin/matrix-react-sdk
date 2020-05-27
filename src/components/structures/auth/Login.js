@@ -24,16 +24,11 @@ import * as sdk from '../../../index';
 import Login from '../../../Login';
 import SdkConfig from '../../../SdkConfig';
 import { messageForResourceLimitError } from '../../../utils/ErrorUtils';
-import AutoDiscoveryUtils, {ValidatedServerConfig} from "../../../utils/AutoDiscoveryUtils";
 import classNames from "classnames";
 import AuthPage from "../../views/auth/AuthPage";
-
-// For validating phone numbers without country codes
-const PHONE_NUMBER_REGEX = /^[0-9()\-\s]*$/;
+import Tchap from "../../../tchap/Tchap";
 
 // Phases
-// Show controls to configure server details
-const PHASE_SERVER_DETAILS = 0;
 // Show the appropriate login flow(s) for the server
 const PHASE_LOGIN = 1;
 
@@ -80,8 +75,6 @@ export default createReactClass({
         onRegisterClick: PropTypes.func.isRequired,
         onForgotPasswordClick: PropTypes.func,
         onServerConfigChange: PropTypes.func.isRequired,
-
-        serverConfig: PropTypes.instanceOf(ValidatedServerConfig).isRequired,
     },
 
     getInitialState: function() {
@@ -93,8 +86,6 @@ export default createReactClass({
 
             // used for preserving form values when changing homeserver
             username: "",
-            phoneCountry: null,
-            phoneNumber: "",
 
             // Phase of the overall login dialog.
             phase: PHASE_LOGIN,
@@ -118,10 +109,6 @@ export default createReactClass({
         // letting you do that login type
         this._stepRendererMap = {
             'm.login.password': this._renderPasswordStep,
-
-            // CAS and SSO are the same thing, modulo the url we link to
-            'm.login.cas': () => this._renderSsoStep(this._loginLogic.getSsoLoginUrl("cas")),
-            'm.login.sso': () => this._renderSsoStep(this._loginLogic.getSsoLoginUrl("sso")),
         };
 
         this._initLoginLogic();
@@ -151,35 +138,14 @@ export default createReactClass({
     },
 
     onPasswordLogin: async function(username, phoneCountry, phoneNumber, password) {
-        if (!this.state.serverIsAlive) {
-            this.setState({busy: true});
-            // Do a quick liveliness check on the URLs
-            let aliveAgain = true;
-            try {
-                await AutoDiscoveryUtils.validateServerConfigWithStaticUrls(
-                    this.props.serverConfig.hsUrl,
-                    this.props.serverConfig.isUrl,
-                );
-                this.setState({serverIsAlive: true, errorText: ""});
-            } catch (e) {
-                const componentState = AutoDiscoveryUtils.authComponentStateForError(e);
-                this.setState({
-                    busy: false,
-                    ...componentState,
-                });
-                aliveAgain = !componentState.serverErrorIsFatal;
-            }
-
-            // Prevent people from submitting their password when something isn't right.
-            if (!aliveAgain) {
-                return;
-            }
-        }
-
         this.setState({
             busy: true,
             errorText: null,
             loginIncorrect: false,
+        });
+
+        await Tchap.discoverPlatform(username).then(hs => {
+            this._initLoginLogic(hs, hs);
         });
 
         this._loginLogic.loginViaPassword(
@@ -224,18 +190,6 @@ export default createReactClass({
             } else if (error.httpStatus === 401 || error.httpStatus === 403) {
                 if (error.errcode === 'M_USER_DEACTIVATED') {
                     errorText = _t('This account has been deactivated.');
-                } else if (SdkConfig.get()['disable_custom_urls']) {
-                    errorText = (
-                        <div>
-                            <div>{ _t('Incorrect username and/or password.') }</div>
-                            <div className="mx_Login_smallError">
-                                {_t(
-                                    'Please note you are logging into the %(hs)s server, not matrix.org.',
-                                    {hs: this.props.serverConfig.hsName},
-                                )}
-                            </div>
-                        </div>
-                    );
                 } else {
                     errorText = _t('Incorrect username and/or password.');
                 }
@@ -267,95 +221,17 @@ export default createReactClass({
     },
 
     onUsernameBlur: async function(username) {
-        const doWellknownLookup = username[0] === "@";
         this.setState({
             username: username,
-            busy: doWellknownLookup,
             errorText: null,
             canTryLogin: true,
         });
-        if (doWellknownLookup) {
-            const serverName = username.split(':').slice(1).join(':');
-            try {
-                const result = await AutoDiscoveryUtils.validateServerName(serverName);
-                this.props.onServerConfigChange(result);
-                // We'd like to rely on new props coming in via `onServerConfigChange`
-                // so that we know the servers have definitely updated before clearing
-                // the busy state. In the case of a full MXID that resolves to the same
-                // HS as Riot's default HS though, there may not be any server change.
-                // To avoid this trap, we clear busy here. For cases where the server
-                // actually has changed, `_initLoginLogic` will be called and manages
-                // busy state for its own liveness check.
-                this.setState({
-                    busy: false,
-                });
-            } catch (e) {
-                console.error("Problem parsing URL or unhandled error doing .well-known discovery:", e);
-
-                let message = _t("Failed to perform homeserver discovery");
-                if (e.translatedMessage) {
-                    message = e.translatedMessage;
-                }
-
-                let errorText = message;
-                let discoveryState = {};
-                if (AutoDiscoveryUtils.isLivelinessError(e)) {
-                    errorText = this.state.errorText;
-                    discoveryState = AutoDiscoveryUtils.authComponentStateForError(e);
-                }
-
-                this.setState({
-                    busy: false,
-                    errorText,
-                    ...discoveryState,
-                });
-            }
-        }
-    },
-
-    onPhoneCountryChanged: function(phoneCountry) {
-        this.setState({ phoneCountry: phoneCountry });
-    },
-
-    onPhoneNumberChanged: function(phoneNumber) {
-        this.setState({
-            phoneNumber: phoneNumber,
-        });
-    },
-
-    onPhoneNumberBlur: function(phoneNumber) {
-        // Validate the phone number entered
-        if (!PHONE_NUMBER_REGEX.test(phoneNumber)) {
-            this.setState({
-                errorText: _t('The phone number entered looks invalid'),
-                canTryLogin: false,
-            });
-        } else {
-            this.setState({
-                errorText: null,
-                canTryLogin: true,
-            });
-        }
     },
 
     onRegisterClick: function(ev) {
         ev.preventDefault();
         ev.stopPropagation();
         this.props.onRegisterClick();
-    },
-
-    async onServerDetailsNextPhaseClick() {
-        this.setState({
-            phase: PHASE_LOGIN,
-        });
-    },
-
-    onEditServerDetailsClick(ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        this.setState({
-            phase: PHASE_SERVER_DETAILS,
-        });
     },
 
     _initLoginLogic: async function(hsUrl, isUrl) {
@@ -381,35 +257,6 @@ export default createReactClass({
             currentFlow: null, // reset flow
             loginIncorrect: false,
         });
-
-        // Do a quick liveliness check on the URLs
-        try {
-            const { warning } =
-                await AutoDiscoveryUtils.validateServerConfigWithStaticUrls(hsUrl, isUrl);
-            if (warning) {
-                this.setState({
-                    ...AutoDiscoveryUtils.authComponentStateForError(warning),
-                    errorText: "",
-                });
-            } else {
-                this.setState({
-                    serverIsAlive: true,
-                    errorText: "",
-                });
-            }
-        } catch (e) {
-            this.setState({
-                busy: false,
-                ...AutoDiscoveryUtils.authComponentStateForError(e),
-            });
-            if (this.state.serverErrorIsFatal) {
-                // Server is dead: show server details prompt instead
-                this.setState({
-                    phase: PHASE_SERVER_DETAILS,
-                });
-                return;
-            }
-        }
 
         loginLogic.getFlows().then((flows) => {
             // look for a flow where we understand all of the steps.
@@ -509,32 +356,6 @@ export default createReactClass({
         return errorText;
     },
 
-    renderServerComponent() {
-        const ServerConfig = sdk.getComponent("auth.ServerConfig");
-
-        if (SdkConfig.get()['disable_custom_urls']) {
-            return null;
-        }
-
-        if (PHASES_ENABLED && this.state.phase !== PHASE_SERVER_DETAILS) {
-            return null;
-        }
-
-        const serverDetailsProps = {};
-        if (PHASES_ENABLED) {
-            serverDetailsProps.onAfterSubmit = this.onServerDetailsNextPhaseClick;
-            serverDetailsProps.submitText = _t("Next");
-            serverDetailsProps.submitClass = "mx_Login_submit";
-        }
-
-        return <ServerConfig
-            serverConfig={this.props.serverConfig}
-            onServerConfigChange={this.props.onServerConfigChange}
-            delayTimeMs={250}
-            {...serverDetailsProps}
-        />;
-    },
-
     renderLoginComponentForStep() {
         if (PHASES_ENABLED && this.state.phase !== PHASE_LOGIN) {
             return null;
@@ -570,44 +391,13 @@ export default createReactClass({
                onError={this.onPasswordLoginError}
                onEditServerDetailsClick={onEditServerDetailsClick}
                initialUsername={this.state.username}
-               initialPhoneCountry={this.state.phoneCountry}
-               initialPhoneNumber={this.state.phoneNumber}
                onUsernameChanged={this.onUsernameChanged}
                onUsernameBlur={this.onUsernameBlur}
-               onPhoneCountryChanged={this.onPhoneCountryChanged}
-               onPhoneNumberChanged={this.onPhoneNumberChanged}
-               onPhoneNumberBlur={this.onPhoneNumberBlur}
                onForgotPasswordClick={this.props.onForgotPasswordClick}
                loginIncorrect={this.state.loginIncorrect}
                serverConfig={this.props.serverConfig}
                disableSubmit={this.isBusy()}
             />
-        );
-    },
-
-    _renderSsoStep: function(url) {
-        const SignInToText = sdk.getComponent('views.auth.SignInToText');
-
-        let onEditServerDetailsClick = null;
-        // If custom URLs are allowed, wire up the server details edit link.
-        if (PHASES_ENABLED && !SdkConfig.get()['disable_custom_urls']) {
-            onEditServerDetailsClick = this.onEditServerDetailsClick;
-        }
-        // XXX: This link does *not* have a target="_blank" because single sign-on relies on
-        // redirecting the user back to a URI once they're logged in. On the web, this means
-        // we use the same window and redirect back to riot. On electron, this actually
-        // opens the SSO page in the electron app itself due to
-        // https://github.com/electron/electron/issues/8841 and so happens to work.
-        // If this bug gets fixed, it will break SSO since it will open the SSO page in the
-        // user's browser, let them log into their SSO provider, then redirect their browser
-        // to vector://vector which, of course, will not work.
-        return (
-            <div>
-                <SignInToText serverConfig={this.props.serverConfig}
-                    onEditServerDetailsClick={onEditServerDetailsClick} />
-
-                <a href={url} className="mx_Login_sso_link mx_Login_submit">{ _t('Sign in with single sign-on') }</a>
-            </div>
         );
     },
 
@@ -652,7 +442,6 @@ export default createReactClass({
                     </h2>
                     { errorTextSection }
                     { serverDeadSection }
-                    { this.renderServerComponent() }
                     { this.renderLoginComponentForStep() }
                     <a className="mx_AuthBody_changeFlow" onClick={this.onRegisterClick} href="#">
                         { _t('Create account') }

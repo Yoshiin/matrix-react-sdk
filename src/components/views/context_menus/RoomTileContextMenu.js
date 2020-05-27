@@ -33,6 +33,7 @@ import RoomListActions from '../../../actions/RoomListActions';
 import RoomViewStore from '../../../stores/RoomViewStore';
 import {sleep} from "../../../utils/promise";
 import {MenuItem, MenuItemCheckbox, MenuItemRadio} from "../../structures/ContextMenu";
+import Tchap from "../../../tchap/Tchap";
 
 const RoomTagOption = ({active, onClick, src, srcSet, label}) => {
     const classes = classNames('mx_RoomTileContextMenu_tag_field', {
@@ -122,53 +123,30 @@ export default createReactClass({
         }
     },
 
-    _onClickLowPriority: function() {
-        // Tag room as 'Low Priority'
-        if (!this.state.isLowPriority && this.state.isFavourite) {
-            this.setState({
-                isFavourite: false,
-                isLowPriority: true,
-            });
-            this._toggleTag("m.lowpriority", "m.favourite");
-        } else if (this.state.isLowPriority) {
-            this.setState({isLowPriority: false});
-            this._toggleTag(null, "m.lowpriority");
-        } else if (!this.state.isLowPriority) {
-            this.setState({isLowPriority: true});
-            this._toggleTag("m.lowpriority");
-        }
-    },
-
-    _onClickDM: function() {
-        if (MatrixClientPeg.get().isGuest()) return;
-
-        const newIsDirectMessage = !this.state.isDirectMessage;
-        this.setState({
-            isDirectMessage: newIsDirectMessage,
-        });
-
-        Rooms.guessAndSetDMRoom(
-            this.props.room, newIsDirectMessage,
-        ).then(sleep(500)).finally(() => {
-            // Close the context menu
-            if (this.props.onFinished) {
-                this.props.onFinished();
-            }
-        }, (err) => {
-            const ErrorDialog = sdk.getComponent("dialogs.ErrorDialog");
-            Modal.createTrackedDialog('Failed to set Direct Message status of room', '', ErrorDialog, {
-                title: _t('Failed to set Direct Message status of room'),
-                description: ((err && err.message) ? err.message : _t('Operation failed')),
-            });
-        });
-    },
-
     _onClickLeave: function() {
-        // Leave room
-        dis.dispatch({
-            action: 'leave_room',
-            room_id: this.props.room.roomId,
-        });
+        const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
+        if (Tchap.isUserLastAdmin(this.props.room)) {
+            Modal.createTrackedDialog('Last admin leave', '', QuestionDialog, {
+                title: _t("You are the last administrator"),
+                description: _t("Are you sure you want to leave the room? The room will no longer be administered, and you may not be able to join it again."),
+                button: _t("Leave"),
+                onFinished: (proceed) => {
+                    if (proceed) {
+                        // Leave room
+                        dis.dispatch({
+                            action: 'leave_room',
+                            room_id: this.props.room.roomId,
+                        });
+                    }
+                },
+            });
+        } else {
+            // Leave room
+            dis.dispatch({
+                action: 'leave_room',
+                room_id: this.props.room.roomId,
+            });
+        }
 
         // Close the context menu
         if (this.props.onFinished) {
@@ -292,27 +270,6 @@ export default createReactClass({
         );
     },
 
-    _onClickSettings: function() {
-        dis.dispatch({
-            action: 'open_room_settings',
-            room_id: this.props.room.roomId,
-        });
-        if (this.props.onFinished) {
-            this.props.onFinished();
-        }
-    },
-
-    _renderSettingsMenu: function() {
-        return (
-            <div>
-                <MenuItem className="mx_RoomTileContextMenu_tag_field" onClick={this._onClickSettings}>
-                    <img className="mx_RoomTileContextMenu_tag_icon" src={require("../../../../res/img/feather-customised/settings.svg")} width="15" height="15" alt="" />
-                    { _t('Settings') }
-                </MenuItem>
-            </div>
-        );
-    },
-
     _renderLeaveMenu: function(membership) {
         if (!membership) {
             return null;
@@ -357,20 +314,6 @@ export default createReactClass({
                     src={require("../../../../res/img/icon_context_fave.svg")}
                     srcSet={require("../../../../res/img/icon_context_fave_on.svg")}
                 />
-                <RoomTagOption
-                    active={this.state.isLowPriority}
-                    label={_t('Low Priority')}
-                    onClick={this._onClickLowPriority}
-                    src={require("../../../../res/img/icon_context_low.svg")}
-                    srcSet={require("../../../../res/img/icon_context_low_on.svg")}
-                />
-                <RoomTagOption
-                    active={this.state.isDirectMessage}
-                    label={_t('Direct Chat')}
-                    onClick={this._onClickDM}
-                    src={require("../../../../res/img/icon_context_person.svg")}
-                    srcSet={require("../../../../res/img/icon_context_person_on.svg")}
-                />
             </div>
         );
     },
@@ -386,8 +329,6 @@ export default createReactClass({
                     { this._renderLeaveMenu(myMembership) }
                     <hr className="mx_RoomTileContextMenu_separator" role="separator" />
                     { this._renderRoomTagMenu() }
-                    <hr className="mx_RoomTileContextMenu_separator" role="separator" />
-                    { this._renderSettingsMenu() }
                 </div>;
             case 'invite':
                 return <div>
@@ -396,8 +337,6 @@ export default createReactClass({
             default:
                 return <div>
                     { this._renderLeaveMenu(myMembership) }
-                    <hr className="mx_RoomTileContextMenu_separator" role="separator" />
-                    { this._renderSettingsMenu() }
                 </div>;
         }
     },

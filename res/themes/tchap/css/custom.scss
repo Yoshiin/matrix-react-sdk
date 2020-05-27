@@ -1,0 +1,47 @@
+.mx_BaseAvatar_initial {
+    z-index: 1;
+}
+
+.mx_RoomTile_avatar_room .mx_RoomTile_avatar_container .mx_BaseAvatar .mx_BaseAvatar_image,
+.mx_RoomTile_avatar_room .mx_RoomTile_avatar_container .mx_BaseAvatar_image {
+    -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    vertical-align: top;
+    background-color: $avatar-bg-color;
+    border-radius: 0;
+}
+
+.mx_RoomHeader_avatar_room .mx_BaseAvatar .mx_BaseAvatar_image,
+.mx_RoomHeader_avatar_room .mx_BaseAvatar_image {
+    -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    border-radius: 0;
+}
+
+.tc_RoomDirectory_roomPreview {
+    padding: 7px 4px 7px 4px !important;
+}
+
+.mx_RoomDirectory_preview {
+    width: 60px;
+}
+
+.mx_RoomDirectory_join {
+    width: 93px;
+}
+
+.mx_EntityTile_name_expired {
+    color: $primary-fg-color;
+    opacity: 0.25;
+}
+
+.mx_EntityTile_unavailable .mx_EntityTile_avatar,
+.mx_EntityTile_unavailable .mx_EntityTile_name,
+.mx_EntityTile_offline_beenactive .mx_EntityTile_avatar,
+.mx_EntityTile_offline_beenactive .mx_EntityTile_name,
+.mx_EntityTile_online_beenactive .mx_EntityTile_avatar,
+.mx_EntityTile_online_beenactive .mx_EntityTile_name,
+.mx_EntityTile_offline_neveractive .mx_EntityTile_avatar,
+.mx_EntityTile_offline_neveractive .mx_EntityTile_name {
+    opacity: 0.9;
+}

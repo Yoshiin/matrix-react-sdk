@@ -27,6 +27,7 @@ import rate_limited_func from "../../../ratelimitedfunc";
 import {MatrixClientPeg} from "../../../MatrixClientPeg";
 import * as sdk from "../../../index";
 import CallHandler from "../../../CallHandler";
+import DMRoomMap from "../../../utils/DMRoomMap";
 
 const INITIAL_LOAD_NUM_MEMBERS = 30;
 const INITIAL_LOAD_NUM_INVITED = 5;
@@ -61,10 +62,11 @@ export default createReactClass({
         cli.on("Room", this.onRoom); // invites & joining after peek
         const enablePresenceByHsUrl = SdkConfig.get()["enable_presence_by_hs_url"];
         const hsUrl = MatrixClientPeg.get().baseUrl;
-        this._showPresence = true;
-        if (enablePresenceByHsUrl && enablePresenceByHsUrl[hsUrl] !== undefined) {
+        this._showPresence = false;
+        // We dont want to use presence for the moment.
+        /*if (enablePresenceByHsUrl && enablePresenceByHsUrl[hsUrl] !== undefined) {
             this._showPresence = enablePresenceByHsUrl[hsUrl];
-        }
+        }*/
     },
 
     _listenForMembersChanges: function() {
@@ -464,10 +466,14 @@ export default createReactClass({
             }
 
             const AccessibleButton = sdk.getComponent("elements.AccessibleButton");
-            inviteButton =
-                <AccessibleButton className="mx_MemberList_invite" onClick={this.onInviteButtonClick} disabled={!canInvite}>
-                    <span>{ _t('Invite to this room') }</span>
-                </AccessibleButton>;
+            const dmRoomMap = new DMRoomMap(MatrixClientPeg.get());
+            const isDMRoom = Boolean(dmRoomMap.getUserIdForRoomId(room.roomId));
+            if (!isDMRoom) {
+                inviteButton =
+                  <AccessibleButton className="mx_MemberList_invite" onClick={this.onInviteButtonClick} disabled={!canInvite}>
+                      <span>{ _t('Invite to this room') }</span>
+                  </AccessibleButton>;
+            }
         }
 
         let invitedHeader;

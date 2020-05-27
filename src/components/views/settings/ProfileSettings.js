@@ -95,13 +95,6 @@ export default class ProfileSettings extends React.Component {
         this.setState(newState);
     };
 
-    _onDisplayNameChanged = (e) => {
-        this.setState({
-            displayName: e.target.value,
-            enableProfileSave: true,
-        });
-    };
-
     _onAvatarChanged = (e) => {
         if (!e.target.files || !e.target.files.length) {
             this.setState({
@@ -150,12 +143,8 @@ export default class ProfileSettings extends React.Component {
                 <div className="mx_ProfileSettings_profile">
                     <div className="mx_ProfileSettings_controls">
                         <p>
-                            {this.state.userId}
-                            {hostingSignup}
+                            {this.state.displayName}
                         </p>
-                        <Field id="profileDisplayName" label={_t("Display Name")}
-                               type="text" value={this.state.displayName} autoComplete="off"
-                               onChange={this._onDisplayNameChanged} />
                     </div>
                     <AvatarSetting
                         avatarUrl={this.state.avatarUrl}

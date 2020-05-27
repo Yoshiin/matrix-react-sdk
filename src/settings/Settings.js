@@ -186,19 +186,19 @@ export const SETTINGS = {
     "showJoinLeaves": {
         supportedLevels: LEVELS_ROOM_SETTINGS_WITH_ROOM,
         displayName: _td('Show join/leave messages (invites/kicks/bans unaffected)'),
-        default: true,
+        default: false,
         invertedSettingName: 'hideJoinLeaves',
     },
     "showAvatarChanges": {
         supportedLevels: LEVELS_ROOM_SETTINGS_WITH_ROOM,
         displayName: _td('Show avatar changes'),
-        default: true,
+        default: false,
         invertedSettingName: 'hideAvatarChanges',
     },
     "showDisplaynameChanges": {
         supportedLevels: LEVELS_ROOM_SETTINGS_WITH_ROOM,
         displayName: _td('Show display name changes'),
-        default: true,
+        default: false,
         invertedSettingName: 'hideDisplaynameChanges',
     },
     "showReadReceipts": {
@@ -281,7 +281,7 @@ export const SETTINGS = {
     "TagPanel.enableTagPanel": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td('Enable Community Filter Panel'),
-        default: true,
+        default: false,
         invertedSettingName: 'TagPanel.disableTagPanel',
     },
     "theme": {
@@ -339,7 +339,7 @@ export const SETTINGS = {
     },
     "showCookieBar": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS_WITH_CONFIG,
-        default: true,
+        default: false,
     },
     "autocompleteDelay": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS_WITH_CONFIG,
@@ -419,7 +419,7 @@ export const SETTINGS = {
     "promptBeforeInviteUnknownUsers": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td('Prompt before sending invites to potentially invalid matrix IDs'),
-        default: true,
+        default: false,
     },
     "showDeveloperTools": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
@@ -436,7 +436,7 @@ export const SETTINGS = {
     "RoomList.orderByImportance": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td('Order rooms in the room list by most important first instead of most recent'),
-        default: true,
+        default: false,
     },
     "breadcrumbs": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,

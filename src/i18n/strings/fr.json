@@ -2162,5 +2162,12 @@
     "Your homeserver does not support cross-signing.": "Votre serveur d’accueil ne prend pas en charge la signature croisée.",
     "Homeserver feature support:": "Prise en charge de la fonctionnalité par le serveur d’accueil :",
     "exists": "existant",
-    "Verification Requests": "Demandes de vérification"
+    "Verification Requests": "Demandes de vérification",
+    "Tchap theme": "Tchap theme",
+    "Register my account on the red list": "Inscrire mon compte sur liste rouge",
+    "Other users will not be able to discover my account on their searches": "Les autres utilisateurs ne pourrons pas découvrir mon compte lors de leurs recherches",
+    "To disable this option, you must accept that your email address will be visible to the other users.": "Pour désactiver cette option, vous devez accepter que votre adresse email soit visible des autres utilisateurs lors de leurs recherches.",
+    "Are you sure you want to leave the room? The room will no longer be administered, and you may not be able to join it again.": "Voulez-vous vraiment quitter cette conversation ? Elle ne sera plus administrée, et vous risquez de ne plus pouvoir la joindre de nouveau.",
+    "You are the last administrator": "Vous êtes le dernier administrateur",
+    "There's no one else here!": "Il n'y a personne d'autre ici !"
 }

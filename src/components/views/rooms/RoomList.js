@@ -751,22 +751,6 @@ export default createReactClass({
         subLists = subLists.concat(tagSubLists);
         subLists = subLists.concat([
             {
-                list: this.state.lists['m.lowpriority'],
-                label: _t('Low priority'),
-                tagName: "m.lowpriority",
-                order: "recent",
-                incomingCall: incomingCallIfTaggedAs('m.lowpriority'),
-            },
-            {
-                list: this.state.lists['im.vector.fake.archived'],
-                label: _t('Historical'),
-                order: "recent",
-                incomingCall: incomingCallIfTaggedAs('im.vector.fake.archived'),
-                startAsHidden: true,
-                showSpinner: this.state.isLoadingLeftRooms,
-                onHeaderClick: this.onArchivedHeaderClick,
-            },
-            {
                 list: this.state.lists['m.server_notice'],
                 label: _t('System Alerts'),
                 tagName: "m.lowpriority",

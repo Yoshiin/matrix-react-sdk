@@ -196,9 +196,8 @@ export default createReactClass({
                 );
             } else {
                 title = _t(
-                    "Seen by %(displayName)s (%(userName)s) at %(dateTime)s",
-                    {displayName: this.props.member.rawDisplayName,
-                    userName: this.props.fallbackUserId,
+                    "Seen by %(userName)s at %(dateTime)s",
+                    {userName: this.props.member.rawDisplayName,
                     dateTime: dateString},
                 );
             }

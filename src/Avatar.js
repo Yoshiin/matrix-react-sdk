@@ -54,7 +54,7 @@ export function avatarUrlForUser(user, width, height, resizeMethod) {
 }
 
 export function defaultAvatarUrlForString(s) {
-    const images = ['03b381', '368bd6', 'ac3ba8'];
+    const images = ['8b8999'];
     let total = 0;
     for (let i = 0; i < s.length; ++i) {
         total += s.charCodeAt(i);

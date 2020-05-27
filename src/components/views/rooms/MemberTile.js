@@ -23,6 +23,7 @@ import * as sdk from "../../../index";
 import dis from "../../../dispatcher";
 import { _t } from '../../../languageHandler';
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
+import Tchap from "../../../tchap/Tchap";
 
 export default createReactClass({
     displayName: 'MemberTile',
@@ -43,6 +44,7 @@ export default createReactClass({
             statusMessage: this.getStatusMessage(),
             isRoomEncrypted: false,
             e2eStatus: null,
+            userExpired: false,
         };
     },
 
@@ -194,6 +196,16 @@ export default createReactClass({
         });
     },
 
+    _getExpired: function() {
+        Tchap.getUserExpiredInfo(this.props.member.userId).then(data => {
+            if (data === true) {
+                this.setState({
+                    userExpired: data,
+                });
+            }
+        });
+    },
+
     render: function() {
         const MemberAvatar = sdk.getComponent('avatars.MemberAvatar');
         const EntityTile = sdk.getComponent('rooms.EntityTile');
@@ -201,6 +213,7 @@ export default createReactClass({
         const member = this.props.member;
         const name = this._getDisplayName();
         const presenceState = member.user ? member.user.presence : null;
+        this._getExpired();
 
         let statusMessage = null;
         if (member.user && SettingsStore.isFeatureEnabled("feature_custom_status")) {
@@ -250,6 +263,7 @@ export default createReactClass({
                 powerStatus={powerStatus}
                 showPresence={this.props.showPresence}
                 subtextLabel={statusMessage}
+                userExpired={this.state.userExpired}
                 e2eStatus={e2eStatus}
                 onClick={this.onClick}
             />

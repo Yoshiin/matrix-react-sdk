@@ -34,12 +34,8 @@ export default class PasswordLogin extends React.Component {
         onEditServerDetailsClick: PropTypes.func,
         onForgotPasswordClick: PropTypes.func, // fn()
         initialUsername: PropTypes.string,
-        initialPhoneCountry: PropTypes.string,
-        initialPhoneNumber: PropTypes.string,
         initialPassword: PropTypes.string,
         onUsernameChanged: PropTypes.func,
-        onPhoneCountryChanged: PropTypes.func,
-        onPhoneNumberChanged: PropTypes.func,
         onPasswordChanged: PropTypes.func,
         loginIncorrect: PropTypes.bool,
         disableSubmit: PropTypes.bool,
@@ -52,39 +48,23 @@ export default class PasswordLogin extends React.Component {
         onUsernameChanged: function() {},
         onUsernameBlur: function() {},
         onPasswordChanged: function() {},
-        onPhoneCountryChanged: function() {},
-        onPhoneNumberChanged: function() {},
-        onPhoneNumberBlur: function() {},
         initialUsername: "",
-        initialPhoneCountry: "",
-        initialPhoneNumber: "",
         initialPassword: "",
         loginIncorrect: false,
         disableSubmit: false,
     };
-
-    static LOGIN_FIELD_EMAIL = "login_field_email";
-    static LOGIN_FIELD_MXID = "login_field_mxid";
-    static LOGIN_FIELD_PHONE = "login_field_phone";
 
     constructor(props) {
         super(props);
         this.state = {
             username: this.props.initialUsername,
             password: this.props.initialPassword,
-            phoneCountry: this.props.initialPhoneCountry,
-            phoneNumber: this.props.initialPhoneNumber,
-            loginType: PasswordLogin.LOGIN_FIELD_MXID,
         };
 
         this.onForgotPasswordClick = this.onForgotPasswordClick.bind(this);
         this.onSubmitForm = this.onSubmitForm.bind(this);
         this.onUsernameChanged = this.onUsernameChanged.bind(this);
         this.onUsernameBlur = this.onUsernameBlur.bind(this);
-        this.onLoginTypeChange = this.onLoginTypeChange.bind(this);
-        this.onPhoneCountryChanged = this.onPhoneCountryChanged.bind(this);
-        this.onPhoneNumberChanged = this.onPhoneNumberChanged.bind(this);
-        this.onPhoneNumberBlur = this.onPhoneNumberBlur.bind(this);
         this.onPasswordChanged = this.onPasswordChanged.bind(this);
         this.isLoginEmpty = this.isLoginEmpty.bind(this);
     }
@@ -99,30 +79,11 @@ export default class PasswordLogin extends React.Component {
         ev.preventDefault();
 
         let username = ''; // XXX: Synapse breaks if you send null here:
-        let phoneCountry = null;
-        let phoneNumber = null;
         let error;
 
-        switch (this.state.loginType) {
-            case PasswordLogin.LOGIN_FIELD_EMAIL:
-                username = this.state.username;
-                if (!username) {
-                    error = _t('The email field must not be blank.');
-                }
-                break;
-            case PasswordLogin.LOGIN_FIELD_MXID:
-                username = this.state.username;
-                if (!username) {
-                    error = _t('The username field must not be blank.');
-                }
-                break;
-            case PasswordLogin.LOGIN_FIELD_PHONE:
-                phoneCountry = this.state.phoneCountry;
-                phoneNumber = this.state.phoneNumber;
-                if (!phoneNumber) {
-                    error = _t('The phone number field must not be blank.');
-                }
-                break;
+        username = this.state.username;
+        if (!username) {
+            error = _t('The email field must not be blank.');
         }
 
         if (error) {
@@ -137,8 +98,8 @@ export default class PasswordLogin extends React.Component {
 
         this.props.onSubmit(
             username,
-            phoneCountry,
-            phoneNumber,
+            null,
+            null,
             this.state.password,
         );
     }
@@ -152,116 +113,38 @@ export default class PasswordLogin extends React.Component {
         this.props.onUsernameBlur(ev.target.value);
     }
 
-    onLoginTypeChange(ev) {
-        const loginType = ev.target.value;
-        this.props.onError(null); // send a null error to clear any error messages
-        this.setState({
-            loginType: loginType,
-            username: "", // Reset because email and username use the same state
-        });
-    }
-
-    onPhoneCountryChanged(country) {
-        this.setState({
-            phoneCountry: country.iso2,
-            phonePrefix: country.prefix,
-        });
-        this.props.onPhoneCountryChanged(country.iso2);
-    }
-
-    onPhoneNumberChanged(ev) {
-        this.setState({phoneNumber: ev.target.value});
-        this.props.onPhoneNumberChanged(ev.target.value);
-    }
-
-    onPhoneNumberBlur(ev) {
-        this.props.onPhoneNumberBlur(ev.target.value);
-    }
-
     onPasswordChanged(ev) {
         this.setState({password: ev.target.value});
         this.props.onPasswordChanged(ev.target.value);
     }
 
-    renderLoginField(loginType) {
+    renderLoginField() {
         const Field = sdk.getComponent('elements.Field');
 
         const classes = {};
-
-        switch (loginType) {
-            case PasswordLogin.LOGIN_FIELD_EMAIL:
-                classes.error = this.props.loginIncorrect && !this.state.username;
-                return <Field
-                    className={classNames(classes)}
-                    id="mx_PasswordLogin_email"
-                    name="username" // make it a little easier for browser's remember-password
-                    key="email_input"
-                    type="text"
-                    label={_t("Email")}
-                    placeholder="joe@example.com"
-                    value={this.state.username}
-                    onChange={this.onUsernameChanged}
-                    onBlur={this.onUsernameBlur}
-                    disabled={this.props.disableSubmit}
-                    autoFocus
-                />;
-            case PasswordLogin.LOGIN_FIELD_MXID:
-                classes.error = this.props.loginIncorrect && !this.state.username;
-                return <Field
-                    className={classNames(classes)}
-                    id="mx_PasswordLogin_username"
-                    name="username" // make it a little easier for browser's remember-password
-                    key="username_input"
-                    type="text"
-                    label={_t("Username")}
-                    value={this.state.username}
-                    onChange={this.onUsernameChanged}
-                    onBlur={this.onUsernameBlur}
-                    disabled={this.props.disableSubmit}
-                    autoFocus
-                />;
-            case PasswordLogin.LOGIN_FIELD_PHONE: {
-                const CountryDropdown = sdk.getComponent('views.auth.CountryDropdown');
-                classes.error = this.props.loginIncorrect && !this.state.phoneNumber;
-
-                const phoneCountry = <CountryDropdown
-                    value={this.state.phoneCountry}
-                    isSmall={true}
-                    showPrefix={true}
-                    onOptionChange={this.onPhoneCountryChanged}
-                />;
-
-                return <Field
-                    className={classNames(classes)}
-                    id="mx_PasswordLogin_phoneNumber"
-                    name="phoneNumber"
-                    key="phone_input"
-                    type="text"
-                    label={_t("Phone")}
-                    value={this.state.phoneNumber}
-                    prefix={phoneCountry}
-                    onChange={this.onPhoneNumberChanged}
-                    onBlur={this.onPhoneNumberBlur}
-                    disabled={this.props.disableSubmit}
-                    autoFocus
-                />;
-            }
-        }
+        classes.error = this.props.loginIncorrect && !this.state.username;
+        return <Field
+            className={classNames(classes)}
+            id="mx_PasswordLogin_email"
+            name="username" // make it a little easier for browser's remember-password
+            key="email_input"
+            type="text"
+            label={_t("Email")}
+            placeholder="joe@example.com"
+            value={this.state.username}
+            onChange={this.onUsernameChanged}
+            onBlur={this.onUsernameBlur}
+            disabled={this.props.disableSubmit}
+            autoFocus
+        />;
     }
 
     isLoginEmpty() {
-        switch (this.state.loginType) {
-            case PasswordLogin.LOGIN_FIELD_EMAIL:
-            case PasswordLogin.LOGIN_FIELD_MXID:
-                return !this.state.username;
-            case PasswordLogin.LOGIN_FIELD_PHONE:
-                return !this.state.phoneCountry || !this.state.phoneNumber;
-        }
+        return !this.state.username;
     }
 
     render() {
         const Field = sdk.getComponent('elements.Field');
-        const SignInToText = sdk.getComponent('views.auth.SignInToText');
 
         let forgotPasswordJsx;
 
@@ -282,49 +165,11 @@ export default class PasswordLogin extends React.Component {
             error: this.props.loginIncorrect && !this.isLoginEmpty(), // only error password if error isn't top field
         });
 
-        const loginField = this.renderLoginField(this.state.loginType);
-
-        let loginType;
-        if (!SdkConfig.get().disable_3pid_login) {
-            loginType = (
-                <div className="mx_Login_type_container">
-                    <label className="mx_Login_type_label">{ _t('Sign in with') }</label>
-                    <Field
-                        id="mx_PasswordLogin_type"
-                        element="select"
-                        value={this.state.loginType}
-                        onChange={this.onLoginTypeChange}
-                        disabled={this.props.disableSubmit}
-                    >
-                        <option
-                            key={PasswordLogin.LOGIN_FIELD_MXID}
-                            value={PasswordLogin.LOGIN_FIELD_MXID}
-                        >
-                            {_t('Username')}
-                        </option>
-                        <option
-                            key={PasswordLogin.LOGIN_FIELD_EMAIL}
-                            value={PasswordLogin.LOGIN_FIELD_EMAIL}
-                        >
-                            {_t('Email address')}
-                        </option>
-                        <option
-                            key={PasswordLogin.LOGIN_FIELD_PHONE}
-                            value={PasswordLogin.LOGIN_FIELD_PHONE}
-                        >
-                            {_t('Phone')}
-                        </option>
-                    </Field>
-                </div>
-            );
-        }
+        const loginField = this.renderLoginField();
 
         return (
             <div>
-                <SignInToText serverConfig={this.props.serverConfig}
-                    onEditServerDetailsClick={this.props.onEditServerDetailsClick} />
                 <form onSubmit={this.onSubmitForm}>
-                    {loginType}
                     {loginField}
                     <Field
                         className={pwFieldClass}

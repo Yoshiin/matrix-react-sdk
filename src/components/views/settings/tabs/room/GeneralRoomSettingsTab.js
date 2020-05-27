@@ -23,6 +23,8 @@ import AccessibleButton from "../../../elements/AccessibleButton";
 import dis from "../../../../../dispatcher";
 import LabelledToggleSwitch from "../../../elements/LabelledToggleSwitch";
 import MatrixClientContext from "../../../../../contexts/MatrixClientContext";
+import Modal from '../../../../../Modal';
+import Tchap from "../../../../../tchap/Tchap";
 
 export default class GeneralRoomSettingsTab extends React.Component {
     static propTypes = {
@@ -60,10 +62,31 @@ export default class GeneralRoomSettingsTab extends React.Component {
     };
 
     _onLeaveClick = () => {
-        dis.dispatch({
-            action: 'leave_room',
-            room_id: this.props.roomId,
-        });
+        const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
+        const client = this.context;
+        const room = client.getRoom(this.props.roomId);
+
+        if (Tchap.isUserLastAdmin(room)) {
+            Modal.createTrackedDialog('Last admin leave', '', QuestionDialog, {
+                title: _t("You are the last administrator"),
+                description: _t("Are you sure you want to leave the room? The room will no longer be administered, and you may not be able to join it again."),
+                button: _t("Leave"),
+                onFinished: (proceed) => {
+                    if (proceed) {
+                        // Leave room
+                        dis.dispatch({
+                            action: 'leave_room',
+                            room_id: this.props.roomId,
+                        });
+                    }
+                },
+            });
+        } else {
+            dis.dispatch({
+                action: 'leave_room',
+                room_id: this.props.roomId,
+            });
+        }
     };
 
     render() {

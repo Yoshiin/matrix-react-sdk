@@ -67,11 +67,6 @@ export default class UserSettingsDialog extends React.Component {
             <GeneralUserSettingsTab closeSettingsFn={this.props.onFinished} />,
         ));
         tabs.push(new Tab(
-            _td("Flair"),
-            "mx_UserSettingsDialog_flairIcon",
-            <FlairUserSettingsTab />,
-        ));
-        tabs.push(new Tab(
             _td("Notifications"),
             "mx_UserSettingsDialog_bellIcon",
             <NotificationUserSettingsTab />,
@@ -80,11 +75,6 @@ export default class UserSettingsDialog extends React.Component {
             _td("Preferences"),
             "mx_UserSettingsDialog_preferencesIcon",
             <PreferencesUserSettingsTab />,
-        ));
-        tabs.push(new Tab(
-            _td("Voice & Video"),
-            "mx_UserSettingsDialog_voiceIcon",
-            <VoiceUserSettingsTab />,
         ));
         tabs.push(new Tab(
             _td("Security & Privacy"),

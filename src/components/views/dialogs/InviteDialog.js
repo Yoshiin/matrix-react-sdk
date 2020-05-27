@@ -35,6 +35,7 @@ import createRoom, {canEncryptToAllUsers} from "../../../createRoom";
 import {inviteMultipleToRoom} from "../../../RoomInvite";
 import SettingsStore from '../../../settings/SettingsStore';
 import RoomListStore, {TAG_DM} from "../../../stores/RoomListStore";
+import Tchap from "../../../tchap/Tchap";
 
 export const KIND_DM = "dm";
 export const KIND_INVITE = "invite";
@@ -180,6 +181,7 @@ class DMRoomTile extends React.PureComponent {
         onToggle: PropTypes.func.isRequired, // takes 1 argument, the member being toggled
         highlightWord: PropTypes.string,
         isSelected: PropTypes.bool,
+        isDisabled: PropTypes.bool,
     };
 
     _onClick = (e) => {
@@ -229,12 +231,6 @@ class DMRoomTile extends React.PureComponent {
     render() {
         const BaseAvatar = sdk.getComponent("views.avatars.BaseAvatar");
 
-        let timestamp = null;
-        if (this.props.lastActiveTs) {
-            const humanTs = humanizeTime(this.props.lastActiveTs);
-            timestamp = <span className='mx_InviteDialog_roomTile_time'>{humanTs}</span>;
-        }
-
         const avatarSize = 36;
         const avatar = this.props.member.isEmail
             ? <img
@@ -263,13 +259,15 @@ class DMRoomTile extends React.PureComponent {
                 {checkmark}
             </span>
         );
+        let onClickParam = this._onClick;
+        if (this.props.isDisabled) {
+            onClickParam = null;
+        }
 
         return (
-            <div className='mx_InviteDialog_roomTile' onClick={this._onClick}>
+            <div className='mx_InviteDialog_roomTile' onClick={onClickParam}>
                 {stackedAvatar}
                 <span className='mx_InviteDialog_roomTile_name'>{this._highlightName(this.props.member.name)}</span>
-                <span className='mx_InviteDialog_roomTile_userId'>{this._highlightName(this.props.member.userId)}</span>
-                {timestamp}
             </div>
         );
     }
@@ -550,10 +548,11 @@ export default class InviteDialog extends React.PureComponent {
         this.setState({busy: true});
         const targets = this._convertFilter();
         const targetIds = targets.map(t => t.userId);
+        const otherUserId = targetIds[0];
 
         // Check if there is already a DM with these people and reuse it if possible.
         const existingRoom = DMRoomMap.shared().getDMRoomForIdentifiers(targetIds);
-        if (existingRoom) {
+        if (existingRoom && existingRoom.currentState.members[otherUserId].membership !== "leave") {
             dis.dispatch({
                 action: 'view_room',
                 room_id: existingRoom.roomId,
@@ -563,6 +562,46 @@ export default class InviteDialog extends React.PureComponent {
             this.props.onFinished();
             return;
         }
+
+        let otherRoom = Tchap.getExistingRoom(MatrixClientPeg.get().getUserId(), otherUserId);
+        if (otherRoom) {
+            switch (otherRoom.state) {
+                case "invite":
+                    MatrixClientPeg.get().joinRoom(otherRoom.roomId, null).then(() => {
+                        dis.dispatch({
+                            action: 'view_room',
+                            room_id: otherRoom.roomId,
+                            should_peek: false,
+                            joining: true,
+                        });
+                    });
+                    break;
+                case "leave":
+                    inviteMultipleToRoom(otherRoom.roomId, targetIds).then(result => {
+                        dis.dispatch({
+                            action: 'view_room',
+                            room_id: otherRoom.roomId,
+                            should_peek: false,
+                            joining: false,
+                        });
+                        if (!this._shouldAbortAfterInviteError(result)) { // handles setting error message too
+                            this.props.onFinished();
+                        }
+                    }).catch(err => {
+                        console.error(err);
+                        this.setState({
+                            busy: false,
+                            errorText: _t(
+                              "We couldn't invite those users. Please check the users you want to invite and try again.",
+                            ),
+                        });
+                    });
+                    break;
+            }
+            this.props.onFinished();
+            return;
+        }
+
 
         const createRoomOptions = {};
 
@@ -963,6 +1002,11 @@ export default class InviteDialog extends React.PureComponent {
             );
         }
 
+        let isDisabled = false;
+        if (!this.props.roomId) {
+            isDisabled = Boolean(this.state.targets.length);
+        }
+
         const tiles = toRender.map(r => (
             <DMRoomTile
                 member={r.user}
@@ -971,6 +1015,7 @@ export default class InviteDialog extends React.PureComponent {
                 onToggle={this._toggleMember}
                 highlightWord={this.state.filterText}
                 isSelected={this.state.targets.some(t => t.userId === r.userId)}
+                isDisabled={isDisabled}
             />
         ));
         return (
@@ -986,6 +1031,11 @@ export default class InviteDialog extends React.PureComponent {
         const targets = this.state.targets.map(t => (
             <DMUserTile member={t} onRemove={this._removeMember} key={t.userId} />
         ));
+
+        let isDisabled = false;
+        if (!this.props.roomId) {
+            isDisabled = Boolean(targets.length);
+        }
         const input = (
             <textarea
                 key={"input"}
@@ -995,6 +1045,7 @@ export default class InviteDialog extends React.PureComponent {
                 ref={this._editorRef}
                 onPaste={this._onPaste}
                 autoFocus={true}
+                disabled={isDisabled}
             />
         );
         return (

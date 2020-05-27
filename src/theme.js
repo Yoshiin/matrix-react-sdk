@@ -17,7 +17,7 @@ limitations under the License.
 
 import {_t} from "./languageHandler";
 
-export const DEFAULT_THEME = "light";
+export const DEFAULT_THEME = "tchap";
 import Tinter from "./Tinter";
 import dis from "./dispatcher";
 import SettingsStore, {SettingLevel} from "./settings/SettingsStore";
@@ -90,7 +90,7 @@ export class ThemeWatcher {
         // controller that honours the same flag, although probablt better would be to
         // have the theme logic in one place rather than split between however many
         // different places.
-        if (ThemeController.isLogin) return 'light';
+        if (ThemeController.isLogin) return 'tchap';
 
         // If the user has specifically enabled the system matching option (excluding default),
         // then use that over anything else. We pick the lowest possible level for the setting
@@ -130,8 +130,7 @@ export class ThemeWatcher {
 
 export function enumerateThemes() {
     const BUILTIN_THEMES = {
-        "light": _t("Light theme"),
-        "dark": _t("Dark theme"),
+        "tchap": _t("Tchap theme"),
     };
     const customThemes = SettingsStore.getValue("custom_themes");
     const customThemeNames = {};

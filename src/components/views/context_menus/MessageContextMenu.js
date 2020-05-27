@@ -116,37 +116,11 @@ export default createReactClass({
         this.closeMenu();
     },
 
-    e2eInfoClicked: function() {
-        this.props.e2eInfoCallback();
-        this.closeMenu();
-    },
-
     onReportEventClick: function() {
         const ReportEventDialog = sdk.getComponent("dialogs.ReportEventDialog");
         Modal.createTrackedDialog('Report Event', '', ReportEventDialog, {
             mxEvent: this.props.mxEvent,
         }, 'mx_Dialog_reportEvent');
-        this.closeMenu();
-    },
-
-    onViewSourceClick: function() {
-        const ViewSource = sdk.getComponent('structures.ViewSource');
-        Modal.createTrackedDialog('View Event Source', '', ViewSource, {
-            roomId: this.props.mxEvent.getRoomId(),
-            eventId: this.props.mxEvent.getId(),
-            content: this.props.mxEvent.event,
-        }, 'mx_Dialog_viewsource');
-        this.closeMenu();
-    },
-
-    onViewClearSourceClick: function() {
-        const ViewSource = sdk.getComponent('structures.ViewSource');
-        Modal.createTrackedDialog('View Clear Event Source', '', ViewSource, {
-            roomId: this.props.mxEvent.getRoomId(),
-            eventId: this.props.mxEvent.getId(),
-            // FIXME: _clearEvent is private
-            content: this.props.mxEvent._clearEvent,
-        }, 'mx_Dialog_viewsource');
         this.closeMenu();
     },
 
@@ -311,7 +285,6 @@ export default createReactClass({
         let cancelButton;
         let forwardButton;
         let pinButton;
-        let viewClearSourceButton;
         let unhidePreviewButton;
         let externalURLButton;
         let quoteButton;
@@ -385,20 +358,6 @@ export default createReactClass({
             }
         }
 
-        const viewSourceButton = (
-            <MenuItem className="mx_MessageContextMenu_field" onClick={this.onViewSourceClick}>
-                { _t('View Source') }
-            </MenuItem>
-        );
-
-        if (mxEvent.getType() !== mxEvent.getWireType()) {
-            viewClearSourceButton = (
-                <MenuItem className="mx_MessageContextMenu_field" onClick={this.onViewClearSourceClick}>
-                    { _t('View Decrypted Source') }
-                </MenuItem>
-            );
-        }
-
         if (this.props.eventTileOps) {
             if (this.props.eventTileOps.isWidgetHidden()) {
                 unhidePreviewButton = (
@@ -463,15 +422,6 @@ export default createReactClass({
             );
         }
 
-        let e2eInfo;
-        if (this.props.e2eInfoCallback) {
-            e2eInfo = (
-                <MenuItem className="mx_MessageContextMenu_field" onClick={this.e2eInfoClicked}>
-                    { _t('End-to-end encryption information') }
-                </MenuItem>
-            );
-        }
-
         let reportEventButton;
         if (mxEvent.getSender() !== me) {
             reportEventButton = (
@@ -491,14 +441,11 @@ export default createReactClass({
                 { cancelButton }
                 { forwardButton }
                 { pinButton }
-                { viewSourceButton }
-                { viewClearSourceButton }
                 { unhidePreviewButton }
                 { permalinkButton }
                 { quoteButton }
                 { externalURLButton }
                 { collapseReplyThread }
-                { e2eInfo }
                 { reportEventButton }
             </div>
         );

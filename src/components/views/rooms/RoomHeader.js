@@ -208,7 +208,7 @@ export default createReactClass({
 
         const textClasses = classNames('mx_RoomHeader_nametext', { mx_RoomHeader_settingsHint: settingsHint });
         const name =
-            <div className="mx_RoomHeader_name" onClick={this.props.onSettingsClick}>
+            <div className="mx_RoomHeader_name">
                 <div dir="auto" className={textClasses} title={roomName}>{ roomName }</div>
                 { searchStatus }
             </div>;
@@ -233,7 +233,9 @@ export default createReactClass({
                 viewAvatarOnClick={true} />);
         }
 
-        if (this.props.onSettingsClick) {
+        const dmRoomMap = new DMRoomMap(MatrixClientPeg.get());
+        const isDMRoom = Boolean(dmRoomMap.getUserIdForRoomId(this.props.room.roomId));
+        if (this.props.onSettingsClick && !isDMRoom) {
             settingsButton =
                 <AccessibleButton className="mx_RoomHeader_button mx_RoomHeader_settingsButton"
                     onClick={this.props.onSettingsClick}
@@ -295,11 +297,9 @@ export default createReactClass({
                 </AccessibleButton>;
         }
 
-        let manageIntegsButton;
-        if (this.props.room && this.props.room.roomId && this.props.inRoom) {
-            manageIntegsButton = <ManageIntegsButton
-                room={this.props.room}
-            />;
+        let mainAvatarClasses = "mx_RoomHeader_avatar";
+        if (!dmUserId) {
+            mainAvatarClasses += " mx_RoomHeader_avatar_room";
         }
 
         const rightRow =
@@ -307,7 +307,6 @@ export default createReactClass({
                 { settingsButton }
                 { pinnedEventsButton }
                 { shareRoomButton }
-                { manageIntegsButton }
                 { forgetButton }
                 { searchButton }
             </div>;
@@ -315,7 +314,7 @@ export default createReactClass({
         return (
             <div className="mx_RoomHeader light-panel">
                 <div className="mx_RoomHeader_wrapper" aria-owns="mx_RightPanel">
-                    <div className="mx_RoomHeader_avatar">{ roomAvatar }{ e2eIcon }</div>
+                    <div className={mainAvatarClasses}>{ roomAvatar }{ e2eIcon }</div>
                     { privateIcon }
                     { name }
                     { topicElement }

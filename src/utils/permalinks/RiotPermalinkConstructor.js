@@ -32,11 +32,11 @@ export default class RiotPermalinkConstructor extends PermalinkConstructor {
     }
 
     forEvent(roomId: string, eventId: string, serverCandidates: string[]): string {
-        return `${this._riotUrl}/#/room/${roomId}/${eventId}${this.encodeServerCandidates(serverCandidates)}`;
+        return `${this._riotUrl}/#/room/${roomId}/${eventId}`;
     }
 
     forRoom(roomIdOrAlias: string, serverCandidates: string[]): string {
-        return `${this._riotUrl}/#/room/${roomIdOrAlias}${this.encodeServerCandidates(serverCandidates)}`;
+        return `${this._riotUrl}/#/room/${roomIdOrAlias}`;
     }
 
     forUser(userId: string): string {

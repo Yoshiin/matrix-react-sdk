@@ -465,6 +465,7 @@ function textForPowerEvent(event) {
     const diff = [];
     // XXX: This is also surely broken for i18n
     users.forEach((userId) => {
+        const displayName = MatrixClientPeg.get().getUser(userId).rawDisplayName;
         // Previous power level
         const from = event.getPrevContent().users[userId];
         // Current power level
@@ -472,7 +473,7 @@ function textForPowerEvent(event) {
         if (to !== from) {
             diff.push(
                 _t('%(userId)s from %(fromPowerLevel)s to %(toPowerLevel)s', {
-                    userId,
+                    userId: displayName,
                     fromPowerLevel: Roles.textualPowerLevel(from, userDefault),
                     toPowerLevel: Roles.textualPowerLevel(to, userDefault),
                 }),

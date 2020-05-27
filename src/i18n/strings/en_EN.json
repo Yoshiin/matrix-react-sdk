@@ -2135,5 +2135,12 @@
     "Message downloading sleep time(ms)": "Message downloading sleep time(ms)",
     "Failed to set direct chat tag": "Failed to set direct chat tag",
     "Failed to remove tag %(tagName)s from room": "Failed to remove tag %(tagName)s from room",
-    "Failed to add tag %(tagName)s to room": "Failed to add tag %(tagName)s to room"
+    "Failed to add tag %(tagName)s to room": "Failed to add tag %(tagName)s to room",
+    "Tchap theme": "Tchap theme",
+    "Register my account on the red list": "Register my account on the red list",
+    "Other users will not be able to discover my account on their searches": "Other users will not be able to discover my account on their searches",
+    "To disable this option, you must accept that your email address will be visible to the other users.": "To disable this option, you must accept that your email address will be visible to the other users.",
+    "Are you sure you want to leave the room? The room will no longer be administered, and you may not be able to join it again.": "Are you sure you want to leave the room? The room will no longer be administered, and you may not be able to join it again.",
+    "You are the last administrator": "You are the last administrator",
+    "There's no one else here!": "There's no one else here!"
 }

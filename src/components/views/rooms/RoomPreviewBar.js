@@ -444,7 +444,7 @@ export default createReactClass({
                     inviterElement = <span>
                         <span className="mx_RoomPreviewBar_inviter">
                             {inviteMember.rawDisplayName}
-                        </span> ({inviteMember.userId})
+                        </span>
                     </span>;
                 } else {
                     inviterElement = (<span className="mx_RoomPreviewBar_inviter">{this.props.inviterName}</span>);

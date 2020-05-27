@@ -421,12 +421,6 @@ const UserOptionsSection = ({member, isIgnored, canInvite, devices}) => {
         }
     }
 
-    const shareUserButton = (
-        <AccessibleButton onClick={onShareUserClick} className="mx_UserInfo_field">
-            { _t('Share Link to User') }
-        </AccessibleButton>
-    );
-
     let directMessageButton;
     if (!isMe) {
         directMessageButton = (
@@ -442,7 +436,6 @@ const UserOptionsSection = ({member, isIgnored, canInvite, devices}) => {
             <div>
                 { directMessageButton }
                 { readReceiptButton }
-                { shareUserButton }
                 { insertPillButton }
                 { inviteUserButton }
                 { ignoreButton }

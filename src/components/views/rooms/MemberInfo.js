@@ -874,18 +874,11 @@ export default createReactClass({
             }
         }
 
-        const shareUserButton = (
-            <AccessibleButton onClick={this.onShareUserClick} className="mx_MemberInfo_field">
-                { _t('Share Link to User') }
-            </AccessibleButton>
-        );
-
         return (
             <div>
                 <h3>{ _t("User Options") }</h3>
                 <div className="mx_MemberInfo_buttons">
                     { readReceiptButton }
-                    { shareUserButton }
                     { insertPillButton }
                     { ignoreButton }
                     { inviteUserButton }
@@ -962,7 +955,6 @@ export default createReactClass({
             startChat = <div>
                 <h3>{ _t("Direct chats") }</h3>
                 { tiles }
-                { startNewChat }
             </div>;
         }
 
@@ -1069,10 +1061,11 @@ export default createReactClass({
 
         const enablePresenceByHsUrl = SdkConfig.get()["enable_presence_by_hs_url"];
         const hsUrl = this.context.baseUrl;
-        let showPresence = true;
-        if (enablePresenceByHsUrl && enablePresenceByHsUrl[hsUrl] !== undefined) {
+        let showPresence = false;
+        // We dont want to use presence for the moment.
+        /*if (enablePresenceByHsUrl && enablePresenceByHsUrl[hsUrl] !== undefined) {
             showPresence = enablePresenceByHsUrl[hsUrl];
-        }
+        }*/
 
         let presenceLabel = null;
         if (showPresence) {
@@ -1142,9 +1135,6 @@ export default createReactClass({
                 <div className="mx_MemberInfo_container">
 
                     <div className="mx_MemberInfo_profile">
-                        <div className="mx_MemberInfo_profileField">
-                            { this.props.member.userId }
-                        </div>
                         { roomMemberDetails }
                     </div>
                 </div>

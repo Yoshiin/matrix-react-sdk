@@ -537,6 +537,11 @@ export default createReactClass({
             e2eIcon = <E2EIcon status={this.state.e2eStatus} className="mx_RoomTile_e2eIcon" />;
         }
 
+        let mainAvatarClasses = avatarClasses;
+        if (!dmUserId) {
+            mainAvatarClasses += " mx_RoomTile_avatar_room";
+        }
+
         return <React.Fragment>
             <RovingTabIndexWrapper>
                 {({onFocus, isActive, ref}) =>
@@ -553,7 +558,7 @@ export default createReactClass({
                         aria-selected={this.state.selected}
                         role="treeitem"
                     >
-                        <div className={avatarClasses}>
+                        <div className={mainAvatarClasses}>
                             <div className="mx_RoomTile_avatar_container">
                                 <RoomAvatar room={this.props.room} width={24} height={24} />
                                 { dmIndicator }
