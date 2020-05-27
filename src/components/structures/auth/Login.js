@@ -27,6 +27,8 @@ import { messageForResourceLimitError } from '../../../utils/ErrorUtils';
 import classNames from "classnames";
 import AuthPage from "../../views/auth/AuthPage";
 import Tchap from "../../../tchap/Tchap";
+import SSOButton from "../../views/elements/SSOButton";
+import PlatformPeg from '../../../PlatformPeg';
 
 // Phases
 // Show the appropriate login flow(s) for the server
@@ -75,11 +77,15 @@ export default createReactClass({
         onRegisterClick: PropTypes.func.isRequired,
         onForgotPasswordClick: PropTypes.func,
         onServerConfigChange: PropTypes.func.isRequired,
+
+        serverConfig: PropTypes.instanceOf(ValidatedServerConfig).isRequired,
+        isSyncing: PropTypes.bool,
     },
 
     getInitialState: function() {
         return {
             busy: false,
+            busyLoggingIn: null,
             errorText: null,
             loginIncorrect: false,
             canTryLogin: true, // can we attempt to log in or are there validation errors?
@@ -102,7 +108,8 @@ export default createReactClass({
         };
     },
 
-    componentWillMount: function() {
+    // TODO: [REACT-WARNING] Move this to constructor
+    UNSAFE_componentWillMount: function() {
         this._unmounted = false;
 
         // map from login step type to a function which will render a control
@@ -118,7 +125,8 @@ export default createReactClass({
         this._unmounted = true;
     },
 
-    componentWillReceiveProps(newProps) {
+    // TODO: [REACT-WARNING] Replace with appropriate lifecycle event
+    UNSAFE_componentWillReceiveProps(newProps) {
         if (newProps.serverConfig.hsUrl === this.props.serverConfig.hsUrl &&
             newProps.serverConfig.isUrl === this.props.serverConfig.isUrl) return;
 
@@ -140,6 +148,7 @@ export default createReactClass({
     onPasswordLogin: async function(username, phoneCountry, phoneNumber, password) {
         this.setState({
             busy: true,
+            busyLoggingIn: true,
             errorText: null,
             loginIncorrect: false,
         });
@@ -199,19 +208,14 @@ export default createReactClass({
             }
 
             this.setState({
+                busy: false,
+                busyLoggingIn: false,
                 errorText: errorText,
                 // 401 would be the sensible status code for 'incorrect password'
                 // but the login API gives a 403 https://matrix.org/jira/browse/SYN-744
                 // mentions this (although the bug is for UI auth which is not this)
                 // We treat both as an incorrect password
                 loginIncorrect: error.httpStatus === 401 || error.httpStatus === 403,
-            });
-        }).finally(() => {
-            if (this._unmounted) {
-                return;
-            }
-            this.setState({
-                busy: false,
             });
         });
     },
@@ -397,15 +401,18 @@ export default createReactClass({
                loginIncorrect={this.state.loginIncorrect}
                serverConfig={this.props.serverConfig}
                disableSubmit={this.isBusy()}
+               busy={this.props.isSyncing || this.state.busyLoggingIn}
             />
         );
     },
 
     render: function() {
         const Loader = sdk.getComponent("elements.Spinner");
+        const InlineSpinner = sdk.getComponent("elements.InlineSpinner");
         const AuthHeader = sdk.getComponent("auth.AuthHeader");
         const AuthBody = sdk.getComponent("auth.AuthBody");
-        const loader = this.isBusy() ? <div className="mx_Login_loader"><Loader /></div> : null;
+        const loader = this.isBusy() && !this.state.busyLoggingIn ?
+            <div className="mx_Login_loader"><Loader /></div> : null;
 
         const errorText = this.state.errorText;
 
@@ -432,9 +439,28 @@ export default createReactClass({
             );
         }
 
+        let footer;
+        if (this.props.isSyncing || this.state.busyLoggingIn) {
+            footer = <div className="mx_AuthBody_paddedFooter">
+                <div className="mx_AuthBody_paddedFooter_title">
+                    <InlineSpinner w={20} h={20} />
+                    { this.props.isSyncing ? _t("Syncing...") : _t("Signing In...") }
+                </div>
+                { this.props.isSyncing && <div className="mx_AuthBody_paddedFooter_subtitle">
+                    {_t("If you've joined lots of rooms, this might take a while")}
+                </div> }
+            </div>;
+        } else {
+            footer = (
+                <a className="mx_AuthBody_changeFlow" onClick={this.onTryRegisterClick} href="#">
+                    { _t('Create account') }
+                </a>
+            );
+        }
+
         return (
             <AuthPage>
-                <AuthHeader />
+                <AuthHeader disableLanguageSelector={this.props.isSyncing || this.state.busyLoggingIn} />
                 <AuthBody>
                     <h2>
                         {_t('Sign in')}
@@ -443,9 +469,7 @@ export default createReactClass({
                     { errorTextSection }
                     { serverDeadSection }
                     { this.renderLoginComponentForStep() }
-                    <a className="mx_AuthBody_changeFlow" onClick={this.onRegisterClick} href="#">
-                        { _t('Create account') }
-                    </a>
+                    { footer }
                 </AuthBody>
             </AuthPage>
         );

@@ -21,7 +21,6 @@ import RoomProfileSettings from "../../../room_settings/RoomProfileSettings";
 import * as sdk from "../../../../..";
 import AccessibleButton from "../../../elements/AccessibleButton";
 import dis from "../../../../../dispatcher";
-import LabelledToggleSwitch from "../../../elements/LabelledToggleSwitch";
 import MatrixClientContext from "../../../../../contexts/MatrixClientContext";
 import Modal from '../../../../../Modal';
 import Tchap from "../../../../../tchap/Tchap";
@@ -40,26 +39,6 @@ export default class GeneralRoomSettingsTab extends React.Component {
             isRoomPublished: false, // loaded async
         };
     }
-
-    componentWillMount() {
-        this.context.getRoomDirectoryVisibility(this.props.roomId).then((result => {
-            this.setState({isRoomPublished: result.visibility === 'public'});
-        }));
-    }
-
-    onRoomPublishChange = (e) => {
-        const valueBefore = this.state.isRoomPublished;
-        const newValue = !valueBefore;
-        this.setState({isRoomPublished: newValue});
-
-        this.context.setRoomDirectoryVisibility(
-            this.props.roomId,
-            newValue ? 'public' : 'private',
-        ).catch(() => {
-            // Roll back the local echo on the change
-            this.setState({isRoomPublished: valueBefore});
-        });
-    };
 
     _onLeaveClick = () => {
         const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
@@ -98,7 +77,6 @@ export default class GeneralRoomSettingsTab extends React.Component {
         const room = client.getRoom(this.props.roomId);
 
         const canSetAliases = true; // Previously, we arbitrarily only allowed admins to do this
-        const canActuallySetAliases = room.currentState.mayClientSendStateEvent("m.room.aliases", client);
         const canSetCanonical = room.currentState.mayClientSendStateEvent("m.room.canonical_alias", client);
         const canonicalAliasEv = room.currentState.getStateEvents("m.room.canonical_alias", '');
         const aliasEvents = room.currentState.getStateEvents("m.room.aliases");
@@ -113,21 +91,13 @@ export default class GeneralRoomSettingsTab extends React.Component {
                     <RoomProfileSettings roomId={this.props.roomId} />
                 </div>
 
-                <span className='mx_SettingsTab_subheading'>{_t("Room Addresses")}</span>
+                <div className="mx_SettingsTab_heading">{_t("Room Addresses")}</div>
                 <div className='mx_SettingsTab_section mx_SettingsTab_subsectionText'>
                     <AliasSettings roomId={this.props.roomId}
                                    canSetCanonicalAlias={canSetCanonical} canSetAliases={canSetAliases}
                                    canonicalAliasEvent={canonicalAliasEv} aliasEvents={aliasEvents} />
                 </div>
-                <div className='mx_SettingsTab_section'>
-                    <LabelledToggleSwitch value={this.state.isRoomPublished}
-                                          onChange={this.onRoomPublishChange}
-                                          disabled={!canActuallySetAliases}
-                                          label={_t("Publish this room to the public in %(domain)s's room directory?", {
-                                              domain: client.getDomain(),
-                                          })} />
-                </div>
-
+                <div className="mx_SettingsTab_heading">{_t("Other")}</div>
                 <span className='mx_SettingsTab_subheading'>{_t("Flair")}</span>
                 <div className='mx_SettingsTab_section mx_SettingsTab_subsectionText'>
                     <RelatedGroupSettings roomId={room.roomId}

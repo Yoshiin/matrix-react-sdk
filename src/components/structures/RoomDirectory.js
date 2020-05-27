@@ -41,14 +41,7 @@ export default createReactClass({
     displayName: 'RoomDirectory',
 
     propTypes: {
-        config: PropTypes.object,
         onFinished: PropTypes.func.isRequired,
-    },
-
-    getDefaultProps: function() {
-        return {
-            config: {},
-        };
     },
 
     getInitialState: function() {
@@ -66,7 +59,8 @@ export default createReactClass({
         };
     },
 
-    componentWillMount: function() {
+    // TODO: [REACT-WARNING] Move this to constructor
+    UNSAFE_componentWillMount: function() {
         this._unmounted = false;
         this.nextBatch = null;
         this.filterTimeout = null;
@@ -99,7 +93,7 @@ export default createReactClass({
                 ),
             });
         });
-        this._populateRoomList();
+        this.refreshRoomList();
     },
 
     componentWillUnmount: function() {
@@ -359,7 +353,10 @@ export default createReactClass({
 
     onCreateRoomClick: function(room) {
         this.props.onFinished();
-        dis.dispatch({action: 'view_create_room'});
+        dis.dispatch({
+            action: 'view_create_room',
+            public: true,
+        });
     },
 
     showRoomAlias: function(alias, autoJoin=false) {
@@ -588,8 +585,11 @@ export default createReactClass({
             listHeader = <div className="mx_RoomDirectory_listheader">
                 <DirectorySearchBox
                     className="mx_RoomDirectory_searchbox"
-                    onChange={this.onFilterChange} onClear={this.onFilterClear} onJoinClick={this.onJoinFromSearchClick}
-                    placeholder={placeholder} showJoinButton={showJoinButton}
+                    onChange={this.onFilterChange}
+                    onClear={this.onFilterClear}
+                    onJoinClick={this.onJoinFromSearchClick}
+                    placeholder={placeholder}
+                    showJoinButton={showJoinButton}
                 />
             </div>;
         }
@@ -611,7 +611,7 @@ export default createReactClass({
                 title={_t("Explore rooms")}
             >
                 <div className="mx_RoomDirectory">
-                    <p>{explanation}</p>
+                    {explanation}
                     <div className="mx_RoomDirectory_list">
                         {listHeader}
                         {content}

@@ -63,13 +63,15 @@ export default class GeneralUserSettingsTab extends React.Component {
             emails: [],
             msisdns: [],
             redListOption,
+            loading3pids: true, // whether or not the emails and msisdns have been loaded
             ...this._calculateThemeState(),
         };
 
         this.dispatcherRef = dis.register(this._onAction);
     }
 
-    async componentWillMount() {
+    // TODO: [REACT-WARNING] Move this to constructor
+    async UNSAFE_componentWillMount() { // eslint-disable-line camelcase
         const cli = MatrixClientPeg.get();
 
         const serverSupportsSeparateAddAndBind = await cli.doesServerSupportSeparateAddAndBind();
@@ -150,8 +152,11 @@ export default class GeneralUserSettingsTab extends React.Component {
             );
             console.warn(e);
         }
-        this.setState({ emails: threepids.filter((a) => a.medium === 'email') });
-        this.setState({ msisdns: threepids.filter((a) => a.medium === 'msisdn') });
+        this.setState({
+            emails: threepids.filter((a) => a.medium === 'email'),
+            msisdns: threepids.filter((a) => a.medium === 'msisdn'),
+            loading3pids: false,
+        });
     }
 
     async _checkTerms() {
