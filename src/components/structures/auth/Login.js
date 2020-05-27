@@ -26,9 +26,8 @@ import SdkConfig from '../../../SdkConfig';
 import { messageForResourceLimitError } from '../../../utils/ErrorUtils';
 import classNames from "classnames";
 import AuthPage from "../../views/auth/AuthPage";
+import {ValidatedServerConfig} from "../../../utils/AutoDiscoveryUtils";
 import Tchap from "../../../tchap/Tchap";
-import SSOButton from "../../views/elements/SSOButton";
-import PlatformPeg from '../../../PlatformPeg';
 
 // Phases
 // Show the appropriate login flow(s) for the server
