@@ -124,8 +124,11 @@ export default createReactClass({
     },
 
     _onClickLeave: function() {
+        const dmRoomMap = new DMRoomMap(MatrixClientPeg.get());
+        const isDMRoom = Boolean(dmRoomMap.getUserIdForRoomId(this.props.room.roomId));
         const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
-        if (Tchap.isUserLastAdmin(this.props.room)) {
+
+        if (Tchap.isUserLastAdmin(this.props.room) && !isDMRoom) {
             Modal.createTrackedDialog('Last admin leave', '', QuestionDialog, {
                 title: _t("You are the last administrator"),
                 description: _t("Are you sure you want to leave the room? The room will no longer be administered, and you may not be able to join it again."),

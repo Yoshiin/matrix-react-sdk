@@ -38,6 +38,20 @@
     padding: 4px 4px 4px 4px;
 }
 
+.mx_RoomHeader_accessibility {
+    color: $roomheader-accessibility-color;
+    font-weight: 400;
+    font-size: 13px;
+    margin: 0 7px;
+    margin-top: 4px; // to align baseline of topic with room name
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid transparent;
+    line-height: 1.2em;
+    max-height: 2.4em;
+    font-style: italic;
+}
+
 .mx_RoomTile_avatar_restricted {
     background-image: url('$(res)/img/162d58.png');
     background-repeat: no-repeat;

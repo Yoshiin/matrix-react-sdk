@@ -167,7 +167,7 @@ export const SETTINGS = {
     "useCompactLayout": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td('Use compact timeline layout'),
-        default: false,
+        default: true,
     },
     "showRedactions": {
         supportedLevels: LEVELS_ROOM_SETTINGS_WITH_ROOM,
@@ -207,7 +207,7 @@ export const SETTINGS = {
     "alwaysShowTimestamps": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td('Always show message timestamps'),
-        default: false,
+        default: true,
     },
     "autoplayGifsAndVideos": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
@@ -217,12 +217,12 @@ export const SETTINGS = {
     "alwaysShowEncryptionIcons": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td('Always show encryption icons'),
-        default: true,
+        default: false,
     },
     "showRoomRecoveryReminder": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td('Show a reminder to enable Secure Message Recovery in encrypted rooms'),
-        default: true,
+        default: false,
     },
     "enableSyntaxHighlightLanguageDetection": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
@@ -278,7 +278,7 @@ export const SETTINGS = {
     },
     "theme": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
-        default: "light",
+        default: "tchap",
         controller: new ThemeController(),
     },
     "custom_themes": {
@@ -386,7 +386,7 @@ export const SETTINGS = {
     },
     "notificationsEnabled": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS,
-        default: false,
+        default: true,
         controller: new NotificationsEnabledController(),
     },
     "notificationSound": {
@@ -442,7 +442,7 @@ export const SETTINGS = {
     "breadcrumbs": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td("Show shortcuts to recently viewed rooms above the room list"),
-        default: true,
+        default: false,
     },
     "showHiddenEventsInTimeline": {
         displayName: _td("Show hidden events in timeline"),

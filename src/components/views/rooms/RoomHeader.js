@@ -304,9 +304,13 @@ export default createReactClass({
             encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_room.svg")} width="10" height="12" alt="encrypted" />;
         }
 
+        let roomAccessibility;
         let mainAvatarClasses = "mx_RoomHeader_avatar";
         if (!dmUserId) {
             mainAvatarClasses += ` mx_RoomHeader_avatar_room mx_RoomHeader_avatar_${Tchap.getAccessRules(this.props.room.roomId)}`;
+            if (Tchap.getAccessRules(this.props.room.roomId) !== "restricted") {
+                roomAccessibility = (<div className="mx_RoomHeader_accessibility" ref="accessibility" title={ _t("Room open to external users") } dir="auto">{ _t("Room open to external users") }</div>);
+            }
         }
 
         const rightRow =
@@ -326,6 +330,7 @@ export default createReactClass({
                     { name }
                     { topicElement }
                     { cancelButton }
+                    { roomAccessibility }
                     { rightRow }
                     <RoomHeaderButtons />
                 </div>

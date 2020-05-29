@@ -24,6 +24,7 @@ import SdkConfig from '../../../SdkConfig';
 import Modal from '../../../Modal';
 import { _t } from '../../../languageHandler';
 import sendBugReport from '../../../rageshake/submit-rageshake';
+import {MatrixClientPeg} from "../../../MatrixClientPeg";
 
 export default class BugReportDialog extends React.Component {
     constructor(props) {
@@ -32,7 +33,6 @@ export default class BugReportDialog extends React.Component {
             sendLogs: true,
             busy: false,
             err: null,
-            issueUrl: "",
             text: "",
             progress: null,
         };
@@ -40,7 +40,6 @@ export default class BugReportDialog extends React.Component {
         this._onSubmit = this._onSubmit.bind(this);
         this._onCancel = this._onCancel.bind(this);
         this._onTextChange = this._onTextChange.bind(this);
-        this._onIssueUrlChange = this._onIssueUrlChange.bind(this);
         this._onSendLogsChange = this._onSendLogsChange.bind(this);
         this._sendProgressCallback = this._sendProgressCallback.bind(this);
     }
@@ -54,21 +53,25 @@ export default class BugReportDialog extends React.Component {
     }
 
     _onSubmit(ev) {
-        if ((!this.state.text || !this.state.text.trim()) && (!this.state.issueUrl || !this.state.issueUrl.trim())) {
-            this.setState({
-                err: _t("Please tell us what went wrong or, better, create a GitHub issue that describes the problem."),
-            });
+        let userText;
+        if (this.state.text.length > 0) {
+            userText = this.state.text + '\n\n';
+        } else {
+            if (!this._unmounted) {
+                this.setState({
+                    busy: false,
+                    progress: null,
+                    err: _t("The field note is required."),
+                });
+            }
             return;
         }
 
-        const userText =
-            (this.state.text.length > 0 ? this.state.text + '\n\n': '') + 'Issue: ' +
-            (this.state.issueUrl.length > 0 ? this.state.issueUrl : 'No issue link given');
-
+        const bugReportEndpointUrl = MatrixClientPeg.get().baseUrl + SdkConfig.get().bug_report_endpoint_url;
         this.setState({ busy: true, progress: null, err: null });
         this._sendProgressCallback(_t("Preparing to send logs"));
 
-        sendBugReport(SdkConfig.get().bug_report_endpoint_url, {
+        sendBugReport(bugReportEndpointUrl, {
             userText,
             sendLogs: true,
             progressCallback: this._sendProgressCallback,
@@ -97,10 +100,6 @@ export default class BugReportDialog extends React.Component {
 
     _onTextChange(ev) {
         this.setState({ text: ev.target.value });
-    }
-
-    _onIssueUrlChange(ev) {
-        this.setState({ issueUrl: ev.target.value });
     }
 
     _onSendLogsChange(ev) {
@@ -146,41 +145,21 @@ export default class BugReportDialog extends React.Component {
 
         return (
             <BaseDialog className="mx_BugReportDialog" onFinished={this._onCancel}
-                    title={_t('Submit debug logs')}
+                    title={_t('Report an error')}
                 contentId='mx_Dialog_content'
             >
                 <div className="mx_Dialog_content" id='mx_Dialog_content'>
                     { warning }
                     <p>
-                        { _t(
-                            "Debug logs contain application usage data including your " +
-                            "username, the IDs or aliases of the rooms or groups you " +
-                            "have visited and the usernames of other users. They do " +
-                            "not contain messages.",
-                        ) }
+                        { _t("Describe your problem here.") }
                     </p>
                     <p><b>
                         { _t(
-                            "Before submitting logs, you must <a>create a GitHub issue</a> to describe your problem.",
-                            {},
-                            {
-                                a: (sub) => <a
-                                    target="_blank"
-                                    href="https://github.com/vector-im/riot-web/issues/new"
-                                >
-                                    { sub }
-                                </a>,
-                            },
+                            "In order to diagnose problems, logs from this client will " +
+                            "be sent with this error report. This error report, including " +
+                            "logs, will not be visible publicly."
                         ) }
                     </b></p>
-                    <Field
-                        type="text"
-                        className="mx_BugReportDialog_field_input"
-                        label={_t("GitHub issue")}
-                        onChange={this._onIssueUrlChange}
-                        value={this.state.issueUrl}
-                        placeholder="https://github.com/vector-im/riot-web/issues/..."
-                    />
                     <Field
                         className="mx_BugReportDialog_field_input"
                         element="textarea"
@@ -189,10 +168,8 @@ export default class BugReportDialog extends React.Component {
                         onChange={this._onTextChange}
                         value={this.state.text}
                         placeholder={_t(
-                            "If there is additional context that would help in " +
-                            "analysing the issue, such as what you were doing at " +
-                            "the time, room IDs, user IDs, etc., " +
-                            "please include those things here.",
+                            "Please describe the error encountered. What have you done ? " +
+                            "What was the expected behavior ? What really happened ?"
                         )}
                     />
                     {progress}
