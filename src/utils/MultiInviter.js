@@ -23,6 +23,7 @@ import * as sdk from "../index";
 import Modal from "../Modal";
 import SettingsStore from "../settings/SettingsStore";
 import {defer} from "./promise";
+import Tchap from "../tchap/Tchap";
 
 /**
  * Invites multiple addresses to a room or group, handling rate limiting from the server
@@ -96,12 +97,25 @@ export default class MultiInviter {
 
     async _inviteToRoom(roomId, addr, ignoreProfile) {
         const addrType = getAddressType(addr);
+        const accessRule = Tchap.getAccessRules(roomId);
 
         if (addrType === 'email') {
-            return MatrixClientPeg.get().inviteByEmail(roomId, addr);
+            if (accessRule === 'restricted') {
+                return Tchap.getHSInfoFromEmail(addr).then((d) => {
+                    if (Tchap.isUserExternFromServerHostname(d.hs) === true) {
+                        throw {errcode: "TCHAP.EXTERN_NOT_ALLOWED", error: "Externals are allowed to join this room"};
+                    } else {
+                        return MatrixClientPeg.get().inviteByEmail(roomId, addr);
+                    }
+                })
+            }
         } else if (addrType === 'mx-user-id') {
             const room = MatrixClientPeg.get().getRoom(roomId);
             if (!room) throw new Error("Room not found");
+
+            if (accessRule === 'restricted' && Tchap.isUserExtern(addr) === true) {
+                throw {errcode: "TCHAP.EXTERN_NOT_ALLOWED", error: "Externals are allowed to join this room"};
+            }
 
             const member = room.getMember(addr);
             if (member && ['join', 'invite'].includes(member.membership)) {
@@ -161,6 +175,8 @@ export default class MultiInviter {
                 if (err.errcode === 'M_FORBIDDEN') {
                     fatal = true;
                     errorText = _t('You do not have permission to invite people to this room.');
+                } else if (err.errcode === "TCHAP.EXTERN_NOT_ALLOWED") {
+                    errorText = _t("The user %(user)s is external", {user: address});
                 } else if (err.errcode === "RIOT.ALREADY_IN_ROOM") {
                     errorText = _t("User %(userId)s is already in the room", {userId: address});
                 } else if (err.errcode === 'M_LIMIT_EXCEEDED') {

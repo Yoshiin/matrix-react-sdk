@@ -20,6 +20,9 @@ import {_t} from "../../../languageHandler";
 import {MatrixClientPeg} from "../../../MatrixClientPeg";
 import Field from "../elements/Field";
 import * as sdk from "../../../index";
+import Tchap from "../../../tchap/Tchap";
+import LabelledToggleSwitch from "../elements/LabelledToggleSwitch";
+import Modal from '../../../Modal';
 
 // TODO: Merge with ProfileSettings?
 export default class RoomProfileSettings extends React.Component {
@@ -53,9 +56,12 @@ export default class RoomProfileSettings extends React.Component {
             originalTopic: topic,
             topic: topic,
             enableProfileSave: false,
+            room,
             canSetName: room.currentState.maySendStateEvent('m.room.name', client.getUserId()),
             canSetTopic: room.currentState.maySendStateEvent('m.room.topic', client.getUserId()),
             canSetAvatar: room.currentState.maySendStateEvent('m.room.avatar', client.getUserId()),
+            access_rules: Tchap.getAccessRules(props.roomId),
+            join_rules: this._getJoinRules(room),
         };
 
         this._avatarUpload = createRef();
@@ -146,9 +152,60 @@ export default class RoomProfileSettings extends React.Component {
         reader.readAsDataURL(file);
     };
 
+    _onExternAllowedSwitchChange = () => {
+        const self = this;
+        const access_rules = this.state.access_rules;
+        const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
+        Modal.createTrackedDialog('Allow the externals to join this room', '', QuestionDialog, {
+            title: _t('Allow the externals to join this room'),
+            description: ( _t('This action is irreversible.') + " " + _t('Are you sure you want to allow the externals to join this room ?')),
+            onFinished: (confirm) => {
+                if (confirm) {
+                    self.setState({
+                        access_rules: 'unrestricted'
+                    });
+                    MatrixClientPeg.get().sendStateEvent(
+                        self.props.roomId, "im.vector.room.access_rules",
+                        { rule: 'unrestricted' },
+                        "",
+                    )
+                } else {
+                    self.setState({
+                        access_rules
+                    });
+                }
+            },
+        });
+    };
+
+    _getJoinRules = (room) => {
+        const stateEventType = "m.room.join_rules";
+        const keyName = "join_rule";
+        const defaultValue = "public";
+        const event = room.currentState.getStateEvents(stateEventType, '');
+        if (!event) {
+            return defaultValue;
+        }
+        const content = event.getContent();
+        return keyName in content ? content[keyName] : defaultValue;
+    };
+
     render() {
+        const client = MatrixClientPeg.get();
         const AccessibleButton = sdk.getComponent('elements.AccessibleButton');
         const AvatarSetting = sdk.getComponent('settings.AvatarSetting');
+        const isCurrentUserAdmin = this.state.room.getMember(client.getUserId()).powerLevelNorm >= 100;
+
+        let accessRule = null;
+        if (isCurrentUserAdmin && this.state.join_rules !== "public") {
+            accessRule = (
+                <LabelledToggleSwitch value={this.state.access_rules === "unrestricted"}
+                                      onChange={ this._onExternAllowedSwitchChange }
+                                      label={ _t('Allow the externals to join this room') }
+                                      disabled={ this.state.access_rules === "unrestricted" } />
+            );
+        }
+
         return (
             <form onSubmit={this._saveProfile} autoComplete="off" noValidate={true}>
                 <input type="file" ref={this._avatarUpload} className="mx_ProfileSettings_avatarUpload"
@@ -169,6 +226,7 @@ export default class RoomProfileSettings extends React.Component {
                         uploadAvatar={this.state.canSetAvatar ? this._uploadAvatar : undefined}
                         removeAvatar={this.state.canSetAvatar ? this._removeAvatar : undefined} />
                 </div>
+                { accessRule }
                 <AccessibleButton onClick={this._saveProfile} kind="primary"
                                   disabled={!this.state.enableProfileSave}>
                     {_t("Save")}

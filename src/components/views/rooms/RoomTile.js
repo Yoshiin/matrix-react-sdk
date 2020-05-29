@@ -38,6 +38,7 @@ import InviteOnlyIcon from './InviteOnlyIcon';
 // eslint-disable-next-line camelcase
 import rate_limited_func from '../../../ratelimitedfunc';
 import { shieldStatusForRoom } from '../../../utils/ShieldUtils';
+import Tchap from "../../../tchap/Tchap";
 
 export default createReactClass({
     displayName: 'RoomTile',
@@ -515,21 +516,28 @@ export default createReactClass({
         }
 
         let privateIcon = null;
-        if (SettingsStore.getValue("feature_cross_signing")) {
+        /*if (SettingsStore.getValue("feature_cross_signing")) {
             if (this.state.joinRule == "invite" && !dmUserId) {
                 privateIcon = <InviteOnlyIcon collapsedPanel={this.props.collapsed} />;
             }
-        }
+        }*/
 
         let e2eIcon = null;
-        if (this.state.e2eStatus) {
+        /*if (this.state.e2eStatus) {
             e2eIcon = <E2EIcon status={this.state.e2eStatus} className="mx_RoomTile_e2eIcon" />;
+        }*/
+
+        let encryptedIndicator = null;
+        if (MatrixClientPeg.get().isRoomEncrypted(this.props.room.roomId)) {
+            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_room.svg")} className="mx_RoomTile_dm" width="10" height="12" alt="encrypted" />;
         }
 
         let mainAvatarClasses = avatarClasses;
         if (!dmUserId) {
             mainAvatarClasses += " mx_RoomTile_avatar_room";
         }
+
+        mainAvatarClasses += ` mx_RoomTile_avatar_${Tchap.getAccessRules(this.props.room.roomId)}`;
 
         return <React.Fragment>
             <RovingTabIndexWrapper inputRef={this._roomTile}>
@@ -550,10 +558,9 @@ export default createReactClass({
                         <div className={mainAvatarClasses}>
                             <div className="mx_RoomTile_avatar_container">
                                 <RoomAvatar room={this.props.room} width={24} height={24} />
-                                { e2eIcon }
                             </div>
                         </div>
-                        { privateIcon }
+                        { encryptedIndicator }
                         <div className="mx_RoomTile_nameContainer">
                             <div className="mx_RoomTile_labelContainer">
                                 { label }

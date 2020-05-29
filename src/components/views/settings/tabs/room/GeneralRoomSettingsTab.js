@@ -48,6 +48,7 @@ export default class GeneralRoomSettingsTab extends React.Component {
 
     _onRoomPublishChange = () => {
         const client = this.context;
+        console.error(client);
         const room = client.getRoom(this.props.roomId);
         const self = this;
         const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
@@ -60,8 +61,12 @@ export default class GeneralRoomSettingsTab extends React.Component {
                     client.sendStateEvent(room.roomId, "m.room.encryption", { algorithm: "m.megolm.v1.aes-sha2" });
                     client.sendStateEvent(room.roomId, "m.room.join_rules", {join_rule: "invite"}, "");
                     client.sendStateEvent(room.roomId, "m.room.history_visibility", {history_visibility: "invited"}, "");
-                    client.setRoomDirectoryVisibility(room.roomId, 'private').done();
+                    client.setRoomDirectoryVisibility(room.roomId, 'private').catch(() => {
+                        // Roll back the local echo on the change
+                        this.setState({isRoomPublished: true});
+                    });
                     self.setState({isRoomPublished: false});
+
                 }
             },
         });

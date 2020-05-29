@@ -524,12 +524,27 @@ export default class InviteDialog extends React.PureComponent {
         const failedUsers = Object.keys(result.states).filter(a => result.states[a] === 'error');
         if (failedUsers.length > 0) {
             console.log("Failed to invite users: ", result);
-            this.setState({
-                busy: false,
-                errorText: _t("Failed to invite the following users to chat: %(csvUsers)s", {
-                    csvUsers: failedUsers.join(", "),
-                }),
-            });
+            if (result.inviter.errors[Object.keys(result.inviter.errors)[0]].errcode === "TCHAP.EXTERN_NOT_ALLOWED") {
+                let firstErrorAddress;
+                if (Email.looksValid(result.inviter.addrs[0])) {
+                    firstErrorAddress = result.inviter.addrs[0]
+                } else {
+                    firstErrorAddress = MatrixClientPeg.get().getUser(result.inviter.addrs[0]).rawDisplayName
+                }
+                this.setState({
+                    busy: false,
+                    errorText: _t("The user %(user)s is external", {
+                        user: firstErrorAddress,
+                    }),
+                });
+            } else {
+                this.setState({
+                    busy: false,
+                    errorText: _t("Failed to invite the following users to chat: %(csvUsers)s", {
+                        csvUsers: failedUsers.join(", "),
+                    }),
+                });
+            }
             return true; // abort
         }
         return false;
@@ -1003,6 +1018,14 @@ export default class InviteDialog extends React.PureComponent {
         if (showNum === sourceMembers.length - 1) showNum++;
 
         // .slice() will return an incomplete array but won't error on us if we go too far
+
+        if (this.props.kind !== KIND_DM) {
+            if (Tchap.getAccessRules(this.props.roomId) === 'restricted') {
+                sourceMembers = sourceMembers.filter(m => !Tchap.isUserExtern(m.userId));
+            }
+        }
+        if (sourceMembers.length < 1) return null;
+
         const toRender = sourceMembers.slice(0, showNum);
         const hasMore = toRender.length < sourceMembers.length;
 
@@ -1104,6 +1127,19 @@ export default class InviteDialog extends React.PureComponent {
         }
     }
 
+    _renderRestriction() {
+        let restrictionWarning = null;
+        if (this.props.kind !== KIND_DM) {
+            if (Tchap.getAccessRules(this.props.roomId) === 'unrestricted') {
+                restrictionWarning = (<p className='mx_InviteDialog_warningText'>
+                    { _t("Externals are allowed to join this room") }
+                </p>);
+            }
+        }
+        return restrictionWarning;
+    }
+
+
     render() {
         const BaseDialog = sdk.getComponent('views.dialogs.BaseDialog');
         const AccessibleButton = sdk.getComponent("elements.AccessibleButton");
@@ -1123,27 +1159,12 @@ export default class InviteDialog extends React.PureComponent {
         const userId = MatrixClientPeg.get().getUserId();
         if (this.props.kind === KIND_DM) {
             title = _t("Direct Messages");
-            helpText = _t(
-                "Start a conversation with someone using their name, username (like <userId/>) or email address.",
-                {},
-                {userId: () => {
-                    return <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">{userId}</a>;
-                }},
-            );
+            helpText = _t("Start a conversation with someone using their name or email address.");
             buttonText = _t("Go");
             goButtonFn = this._startDm;
         } else { // KIND_INVITE
             title = _t("Invite to this room");
-            helpText = _t(
-                "Invite someone using their name, username (like <userId/>), email address or <a>share this room</a>.",
-                {},
-                {
-                    userId: () =>
-                        <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">{userId}</a>,
-                    a: (sub) =>
-                        <a href={makeRoomPermalink(this.props.roomId)} rel="noreferrer noopener" target="_blank">{sub}</a>,
-                },
-            );
+            helpText = _t("Invite someone using their name or email address.");
             buttonText = _t("Invite");
             goButtonFn = this._inviteUsers;
         }
@@ -1159,6 +1180,7 @@ export default class InviteDialog extends React.PureComponent {
             >
                 <div className='mx_InviteDialog_content'>
                     <p className='mx_InviteDialog_helpText'>{helpText}</p>
+                    { this._renderRestriction() }
                     <div className='mx_InviteDialog_addressBar'>
                         {this._renderEditor()}
                         <div className='mx_InviteDialog_buttonAndSpinner'>

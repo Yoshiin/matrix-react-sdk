@@ -86,33 +86,57 @@ export default function createRoom(opts) {
         opts.andView = true;
     }
 
-    createOpts.initial_state = createOpts.initial_state || [];
 
-    // Allow guests by default since the room is private and they'd
-    // need an invite. This means clicking on a 3pid invite email can
-    // actually drop you right in to a chat.
-    if (opts.guestAccess) {
-        createOpts.initial_state.push({
+    if (opts.access_rules) {
+        createOpts.access_rules = opts.access_rules;
+    }
+
+    let alias;
+    if (createOpts.name) {
+        const tmpAlias = createOpts.name.replace(/[^a-z0-9]/gi, "");
+        alias = tmpAlias + _generateRandomString(7);
+    } else {
+        alias = _generateRandomString(7);
+    }
+
+    if (createOpts.visibility !== 'private') {
+        createOpts.room_alias_name = alias;
+    }
+
+    createOpts.power_level_content_override = {
+        invite: 50,
+    };
+
+    createOpts.initial_state = createOpts.initial_state || [
+        {
+            content: {
+                guest_access: 'forbidden',
+            },
             type: 'm.room.guest_access',
             state_key: '',
+        },
+        {
             content: {
-                guest_access: 'can_join',
+                history_visibility: createOpts.visibility === "private" ? 'invited' : 'world_readable',
             },
-        });
-    }
-
-    if (opts.encryption) {
-        createOpts.initial_state.push({
-            type: 'm.room.encryption',
+            type: 'm.room.history_visibility',
             state_key: '',
+        },
+        {
             content: {
-                algorithm: 'm.megolm.v1.aes-sha2',
+                rule: createOpts.access_rules ? createOpts.access_rules : 'restricted'
             },
-        });
-    }
+            type: 'im.vector.room.access_rules',
+            state_key: '',
+        },
+    ];
 
     let modal;
     if (opts.spinner) modal = Modal.createDialog(Loader, null, 'mx_Dialog_spinner');
+
+    console.error("createOpts");
+    console.dir(createOpts);
+
 
     let roomId;
     return client.createRoom(createOpts).finally(function() {
@@ -234,4 +258,14 @@ export async function ensureDMExists(client, userId) {
         await _waitForMember(client, roomId, userId);
     }
     return roomId;
+}
+
+function _generateRandomString(len) {
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let str = '';
+    for (let i = 0; i < len; i++) {
+        let r = Math.floor(Math.random() * charset.length);
+        str += charset.substring(r, r + 1);
+    }
+    return str;
 }

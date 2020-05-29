@@ -34,6 +34,7 @@ import RoomHeaderButtons from '../right_panel/RoomHeaderButtons';
 import DMRoomMap from '../../../utils/DMRoomMap';
 import E2EIcon from './E2EIcon';
 import InviteOnlyIcon from './InviteOnlyIcon';
+import Tchap from "../../../tchap/Tchap";
 
 export default createReactClass({
     displayName: 'RoomHeader',
@@ -223,7 +224,7 @@ export default createReactClass({
         }
         const topicElement =
             <div className="mx_RoomHeader_topic" ref={this._topic} title={topic} dir="auto">{ topic }</div>;
-        const avatarSize = 28;
+        const avatarSize = 24;
         let roomAvatar;
         if (this.props.room) {
             roomAvatar = (<RoomAvatar
@@ -298,9 +299,14 @@ export default createReactClass({
                 </AccessibleButton>;
         }
 
+        let encryptedIndicator = null;
+        if (MatrixClientPeg.get().isRoomEncrypted(this.props.room.roomId)) {
+            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_room.svg")} width="10" height="12" alt="encrypted" />;
+        }
+
         let mainAvatarClasses = "mx_RoomHeader_avatar";
         if (!dmUserId) {
-            mainAvatarClasses += " mx_RoomHeader_avatar_room";
+            mainAvatarClasses += ` mx_RoomHeader_avatar_room mx_RoomHeader_avatar_${Tchap.getAccessRules(this.props.room.roomId)}`;
         }
 
         const rightRow =
@@ -315,8 +321,8 @@ export default createReactClass({
         return (
             <div className="mx_RoomHeader light-panel">
                 <div className="mx_RoomHeader_wrapper" aria-owns="mx_RightPanel">
-                    <div className={mainAvatarClasses}>{ roomAvatar }{ e2eIcon }</div>
-                    { privateIcon }
+                    <div className={mainAvatarClasses}>{ roomAvatar }</div>
+                    { encryptedIndicator }
                     { name }
                     { topicElement }
                     { cancelButton }

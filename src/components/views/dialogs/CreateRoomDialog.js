@@ -44,6 +44,8 @@ export default createReactClass({
             detailsOpen: false,
             noFederate: config.default_federate === false,
             nameIsValid: false,
+            externAllowed: false,
+            externAllowedSwitchDisabled: !this.props.defaultPublic || true,
         };
     },
 
@@ -55,9 +57,9 @@ export default createReactClass({
             createOpts.visibility = "public";
             createOpts.preset = "public_chat";
             opts.guestAccess = false;
-            const {alias} = this.state;
-            const localPart = alias.substr(1, alias.indexOf(":") - 1);
-            createOpts['room_alias_name'] = localPart;
+        }
+        if (this.state.externAllowed) {
+            createOpts.access_rules = "unrestricted"
         }
         if (this.state.topic) {
             createOpts.topic = this.state.topic;
@@ -74,13 +76,17 @@ export default createReactClass({
     },
 
     componentDidMount() {
-        this._detailsRef.addEventListener("toggle", this.onDetailsToggled);
+        if (this._detailsRef) {
+            this._detailsRef.addEventListener("toggle", this.onDetailsToggled);
+        }
         // move focus to first field when showing dialog
         this._nameFieldRef.focus();
     },
 
     componentWillUnmount() {
-        this._detailsRef.removeEventListener("toggle", this.onDetailsToggled);
+        if (this._detailsRef) {
+            this._detailsRef.removeEventListener("toggle", this.onDetailsToggled);
+        }
     },
 
     _onKeyDown: function(event) {
@@ -132,15 +138,11 @@ export default createReactClass({
     },
 
     onPublicChange(isPublic) {
-        this.setState({isPublic});
-    },
-
-    onEncryptedChange(isEncrypted) {
-        this.setState({isEncrypted});
-    },
-
-    onAliasChange(alias) {
-        this.setState({alias});
+        this.setState({
+            isPublic,
+            externAllowedSwitchDisabled: !isPublic,
+            externAllowed: false
+        });
     },
 
     onDetailsToggled(ev) {
@@ -149,6 +151,14 @@ export default createReactClass({
 
     onNoFederateChange(noFederate) {
         this.setState({noFederate});
+    },
+
+    onExternAllowedSwitchChange(ev) {
+        console.error("ev")
+        console.error(ev)
+        this.setState({
+            externAllowed: ev
+        });
     },
 
     collectDetailsRef(ref) {
@@ -176,33 +186,22 @@ export default createReactClass({
         const DialogButtons = sdk.getComponent('views.elements.DialogButtons');
         const Field = sdk.getComponent('views.elements.Field');
         const LabelledToggleSwitch = sdk.getComponent('views.elements.LabelledToggleSwitch');
-        const RoomAliasField = sdk.getComponent('views.elements.RoomAliasField');
 
         let publicPrivateLabel;
-        let aliasField;
         if (this.state.isPublic) {
-            publicPrivateLabel = (<p>{_t("Set a room alias to easily share your room with other people.")}</p>);
-            const domain = MatrixClientPeg.get().getDomain();
-            aliasField = (
-                <div className="mx_CreateRoomDialog_aliasContainer">
-                    <RoomAliasField ref={ref => this._aliasFieldRef = ref} onChange={this.onAliasChange} domain={domain} value={this.state.alias} />
-                </div>
-            );
+            publicPrivateLabel = null;
         } else {
             publicPrivateLabel = (<p>{_t("This room is private, and can only be joined by invitation.")}</p>);
         }
 
-        let e2eeSection;
-        if (!this.state.isPublic && SettingsStore.getValue("feature_cross_signing")) {
-            e2eeSection = <React.Fragment>
-                <LabelledToggleSwitch
-                    label={ _t("Enable end-to-end encryption")}
-                    onChange={this.onEncryptedChange}
-                    value={this.state.isEncrypted}
-                    className='mx_CreateRoomDialog_e2eSwitch' // for end-to-end tests
-                />
-                <p>{ _t("You can’t disable this later. Bridges & most bots won’t work yet.") }</p>
-            </React.Fragment>;
+        let domainParam = null;
+        if (this.state.isPublic) {
+            domainParam = (
+            <details ref={this.collectDetailsRef} className="mx_CreateRoomDialog_details">
+                <summary className="mx_CreateRoomDialog_details_summary">{ this.state.detailsOpen ? _t('Hide advanced') : _t('Show advanced') }</summary>
+                <LabelledToggleSwitch label={ _t('Block users on other matrix homeservers from joining this room (This setting cannot be changed later!)')} onChange={this.onNoFederateChange} value={this.state.noFederate} />
+            </details>
+            );
         }
 
         const title = this.state.isPublic ? _t('Create a public room') : _t('Create a private room');
@@ -216,12 +215,11 @@ export default createReactClass({
                         <Field label={ _t('Topic (optional)') } onChange={this.onTopicChange} value={this.state.topic} className="mx_CreateRoomDialog_topic" />
                         <LabelledToggleSwitch label={ _t("Make this room public")} onChange={this.onPublicChange} value={this.state.isPublic} />
                         { publicPrivateLabel }
-                        { e2eeSection }
-                        { aliasField }
-                        <details ref={this.collectDetailsRef} className="mx_CreateRoomDialog_details">
-                            <summary className="mx_CreateRoomDialog_details_summary">{ this.state.detailsOpen ? _t('Hide advanced') : _t('Show advanced') }</summary>
-                            <LabelledToggleSwitch label={ _t('Block users on other matrix homeservers from joining this room (This setting cannot be changed later!)')} onChange={this.onNoFederateChange} value={this.state.noFederate} />
-                        </details>
+                        <LabelledToggleSwitch value={this.state.externAllowed}
+                                              onChange={ this.onExternAllowedSwitchChange }
+                                              label={ _t("Allow the externals to join this room") }
+                                              disabled={ this.state.externAllowedSwitchDisabled } />
+                        { domainParam }
                     </div>
                 </form>
                 <DialogButtons primaryButton={_t('Create Room')}

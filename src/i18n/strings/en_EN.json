@@ -2315,5 +2315,13 @@
     "You are the last administrator": "You are the last administrator",
     "There's no one else here!": "There's no one else here!",
     "Are you sure you want to remove this room from the rooms directory?": "Are you sure you want to remove this room from the rooms directory?",
-    "Remove this room from the rooms directory": "Remove this room from the rooms directory"
+    "Remove this room from the rooms directory": "Remove this room from the rooms directory",
+    "Allow the externals to join this room": "Allow the externals to join this room",
+    "Externals are allowed to join this room": "Externals are allowed to join this room",
+    "Externals aren't allowed to join this room": "Externals aren't allowed to join this room",
+    "The user %(user)s is external.": "The user %(user)s is external.",
+    "This action is irreversible": "This action is irreversible",
+    "Are you sure you want to allow the externals to join this room ?": "Are you sure you want to allow the externals to join this room ?",
+    "Invite someone using their name or email address.": "Invite someone using their name or email address.",
+    "Start a conversation with someone using their name or email address.": "Start a conversation with someone using their name or email address."
 }
