@@ -3,7 +3,7 @@ import TchapApi from './TchapApi';
 /**
  * Strong Password utils.
  */
-class TchapStrongPassword {
+export default class TchapStrongPassword {
     static async _getRules(hsUrl) {
         let res = await fetch(`${hsUrl}${TchapApi.passwordRulesUrl}`);
         return await res.json();
@@ -74,5 +74,3 @@ class TchapStrongPassword {
     }
 
 }
-
-module.exports = TchapStrongPassword;

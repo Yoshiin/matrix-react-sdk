@@ -27,6 +27,8 @@ import PasswordReset from "../../../PasswordReset";
 import AutoDiscoveryUtils, {ValidatedServerConfig} from "../../../utils/AutoDiscoveryUtils";
 import classNames from 'classnames';
 import AuthPage from "../../views/auth/AuthPage";
+import Tchap from "../../../tchap/Tchap";
+import TchapStrongPassword from "../../../tchap/TchapStrongPassword";
 
 // Phases
 // Show controls to configure server details
@@ -44,7 +46,6 @@ export default createReactClass({
     displayName: 'ForgotPassword',
 
     propTypes: {
-        serverConfig: PropTypes.instanceOf(ValidatedServerConfig).isRequired,
         onServerConfigChange: PropTypes.func.isRequired,
         onLoginClick: PropTypes.func,
         onComplete: PropTypes.func.isRequired,
@@ -71,35 +72,6 @@ export default createReactClass({
 
     componentDidMount: function() {
         this.reset = null;
-        this._checkServerLiveliness(this.props.serverConfig);
-    },
-
-    // TODO: [REACT-WARNING] Replace with appropriate lifecycle event
-    UNSAFE_componentWillReceiveProps: function(newProps) {
-        if (newProps.serverConfig.hsUrl === this.props.serverConfig.hsUrl &&
-            newProps.serverConfig.isUrl === this.props.serverConfig.isUrl) return;
-
-        // Do a liveliness check on the new URLs
-        this._checkServerLiveliness(newProps.serverConfig);
-    },
-
-    _checkServerLiveliness: async function(serverConfig) {
-        try {
-            await AutoDiscoveryUtils.validateServerConfigWithStaticUrls(
-                serverConfig.hsUrl,
-                serverConfig.isUrl,
-            );
-
-            const pwReset = new PasswordReset(serverConfig.hsUrl, serverConfig.isUrl);
-            const serverRequiresIdServer = await pwReset.doesServerRequireIdServerParam();
-
-            this.setState({
-                serverIsAlive: true,
-                serverRequiresIdServer,
-            });
-        } catch (e) {
-            this.setState(AutoDiscoveryUtils.authComponentStateForError(e, "forgot_password"));
-        }
     },
 
     submitPasswordReset: function(email, password) {
@@ -107,7 +79,8 @@ export default createReactClass({
             phase: PHASE_SENDING_EMAIL,
         });
         this.reset = new PasswordReset(this.props.serverConfig.hsUrl, this.props.serverConfig.isUrl);
-        this.reset.resetPassword(email, password).then(() => {
+        let lowercaseEmail = email.toLowerCase();
+        this.reset.resetPassword(lowercaseEmail, password).then(() => {
             this.setState({
                 phase: PHASE_EMAIL_SENT,
             });
@@ -136,9 +109,6 @@ export default createReactClass({
     onSubmitForm: async function(ev) {
         ev.preventDefault();
 
-        // refresh the server errors, just in case the server came back online
-        await this._checkServerLiveliness(this.props.serverConfig);
-
         if (!this.state.email) {
             this.showErrorDialog(_t('The email address linked to your account must be entered.'));
         } else if (!this.state.password || !this.state.password2) {
@@ -146,24 +116,32 @@ export default createReactClass({
         } else if (this.state.password !== this.state.password2) {
             this.showErrorDialog(_t('New passwords must match each other.'));
         } else {
-            const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
-            Modal.createTrackedDialog('Forgot Password Warning', '', QuestionDialog, {
-                title: _t('Warning!'),
-                description:
-                    <div>
-                        { _t(
-                            "Changing your password will reset any end-to-end encryption keys " +
-                            "on all of your sessions, making encrypted chat history unreadable. Set up " +
-                            "Key Backup or export your room keys from another session before resetting your " +
-                            "password.",
-                        ) }
-                    </div>,
-                button: _t('Continue'),
-                onFinished: (confirmed) => {
-                    if (confirmed) {
-                        this.submitPasswordReset(this.state.email, this.state.password);
+            Tchap.discoverPlatform(this.state.email).then(hs => {
+                TchapStrongPassword.validatePassword(hs, this.state.password).then(isValidPassword => {
+                    if (!isValidPassword) {
+                        this.showErrorDialog(_t('This password is too weak. It must include a lower-case letter, an upper-case letter, a number and a symbol and be at a minimum 8 characters in length.'));
+                    } else {
+                        const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
+                        Modal.createTrackedDialog('Forgot Password Warning', '', QuestionDialog, {
+                            title: _t('Warning!'),
+                            description:
+                                <div>
+                                    { _t(
+                                        "Changing your password will reset any end-to-end encryption keys " +
+                                        "on all of your devices, making encrypted chat history unreadable. Set up " +
+                                        "Key Backup or export your room keys from another device before resetting your " +
+                                        "password.",
+                                    ) }
+                                </div>,
+                            button: _t('Continue'),
+                            onFinished: (confirmed) => {
+                                if (confirmed) {
+                                    this.submitPasswordReset(this.state.email, this.state.password);
+                                }
+                            },
+                        });
                     }
-                },
+                });
             });
         }
     },
@@ -243,24 +221,6 @@ export default createReactClass({
             );
         }
 
-        let yourMatrixAccountText = _t('Your Matrix account on %(serverName)s', {
-            serverName: this.props.serverConfig.hsName,
-        });
-        if (this.props.serverConfig.hsNameIsDifferent) {
-            const TextWithTooltip = sdk.getComponent("elements.TextWithTooltip");
-
-            yourMatrixAccountText = _t('Your Matrix account on <underlinedServerName />', {}, {
-                'underlinedServerName': () => {
-                    return <TextWithTooltip
-                        class="mx_Login_underlinedServerName"
-                        tooltip={this.props.serverConfig.hsUrl}
-                    >
-                        {this.props.serverConfig.hsName}
-                    </TextWithTooltip>;
-                },
-            });
-        }
-
         // If custom URLs are allowed, wire up the server details edit link.
         let editLink = null;
         if (!SdkConfig.get()['disable_custom_urls']) {
@@ -271,29 +231,9 @@ export default createReactClass({
             </a>;
         }
 
-        if (!this.props.serverConfig.isUrl && this.state.serverRequiresIdServer) {
-            return <div>
-                <h3>
-                    {yourMatrixAccountText}
-                    {editLink}
-                </h3>
-                {_t(
-                    "No identity server is configured: " +
-                    "add one in server settings to reset your password.",
-                )}
-                <a className="mx_AuthBody_changeFlow" onClick={this.onLoginClick} href="#">
-                    {_t('Sign in instead')}
-                </a>
-            </div>;
-        }
-
         return <div>
             {errorText}
             {serverDeadSection}
-            <h3>
-                {yourMatrixAccountText}
-                {editLink}
-            </h3>
             <form onSubmit={this.onSubmitForm}>
                 <div className="mx_AuthBody_fieldRow">
                     <Field
@@ -320,6 +260,11 @@ export default createReactClass({
                         value={this.state.password2}
                         onChange={this.onInputChanged.bind(this, "password2")}
                     />
+                    <img className="tc_PasswordHelper" src={require('../../../../res/img/tchap/question_mark.svg')}
+                        width={25} height={25}
+                        title={ _t('Your password must include a lower-case letter, ' +
+                            'an upper-case letter, a number and a symbol and be at a ' +
+                            'minimum 8 characters in length.') } alt={""} />
                 </div>
                 <span>{_t(
                     'A verification email will be sent to your inbox to confirm ' +

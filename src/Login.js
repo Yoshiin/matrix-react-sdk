@@ -131,11 +131,6 @@ export default class Login {
             self._hsUrl, self._isUrl, 'm.login.password', loginParams,
         ).catch((error) => {
             originalLoginError = error;
-            if (error.httpStatus === 403) {
-                if (self._fallbackHsUrl) {
-                    return tryFallbackHs(originalLoginError);
-                }
-            }
             throw originalLoginError;
         }).catch((error) => {
             console.log("Login failed", error);

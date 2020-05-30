@@ -77,7 +77,6 @@ export default createReactClass({
         onForgotPasswordClick: PropTypes.func,
         onServerConfigChange: PropTypes.func.isRequired,
 
-        serverConfig: PropTypes.instanceOf(ValidatedServerConfig).isRequired,
         isSyncing: PropTypes.bool,
     },
 
@@ -116,21 +115,12 @@ export default createReactClass({
         this._stepRendererMap = {
             'm.login.password': this._renderPasswordStep,
         };
-
-        this._initLoginLogic();
+        let urls = "https://matrix.agent.tchap.gouv.fr"
+        this._initLoginLogic(urls, urls);
     },
 
     componentWillUnmount: function() {
         this._unmounted = true;
-    },
-
-    // TODO: [REACT-WARNING] Replace with appropriate lifecycle event
-    UNSAFE_componentWillReceiveProps(newProps) {
-        if (newProps.serverConfig.hsUrl === this.props.serverConfig.hsUrl &&
-            newProps.serverConfig.isUrl === this.props.serverConfig.isUrl) return;
-
-        // Ensure that we end up actually logging in to the right place
-        this._initLoginLogic(newProps.serverConfig.hsUrl, newProps.serverConfig.isUrl);
     },
 
     onPasswordLoginError: function(errorText) {
@@ -238,19 +228,7 @@ export default createReactClass({
     },
 
     _initLoginLogic: async function(hsUrl, isUrl) {
-        hsUrl = hsUrl || this.props.serverConfig.hsUrl;
-        isUrl = isUrl || this.props.serverConfig.isUrl;
-
-        let isDefaultServer = false;
-        if (this.props.serverConfig.isDefault
-            && hsUrl === this.props.serverConfig.hsUrl
-            && isUrl === this.props.serverConfig.isUrl) {
-            isDefaultServer = true;
-        }
-
-        const fallbackHsUrl = isDefaultServer ? this.props.fallbackHsUrl : null;
-
-        const loginLogic = new Login(hsUrl, isUrl, fallbackHsUrl, {
+        const loginLogic = new Login(hsUrl, isUrl, null, {
             defaultDeviceDisplayName: this.props.defaultDeviceDisplayName,
         });
         this._loginLogic = loginLogic;
@@ -347,7 +325,7 @@ export default createReactClass({
                         "is not blocking requests.", {},
                         {
                             'a': (sub) =>
-                                <a target="_blank" rel="noreferrer noopener" href={this.props.serverConfig.hsUrl}>
+                                <a target="_blank" rel="noreferrer noopener" href="#">
                                     { sub }
                                 </a>,
                         },
@@ -398,7 +376,7 @@ export default createReactClass({
                onUsernameBlur={this.onUsernameBlur}
                onForgotPasswordClick={this.props.onForgotPasswordClick}
                loginIncorrect={this.state.loginIncorrect}
-               serverConfig={this.props.serverConfig}
+               serverConfig={null}
                disableSubmit={this.isBusy()}
                busy={this.props.isSyncing || this.state.busyLoggingIn}
             />

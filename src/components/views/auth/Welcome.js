@@ -39,10 +39,9 @@ export default class Welcome extends React.PureComponent {
             pageUrl = 'welcome.html';
         }
 
-        const {hsUrl, isUrl} = this.props.serverConfig;
         const tmpClient = Matrix.createClient({
-            baseUrl: hsUrl,
-            idBaseUrl: isUrl,
+            baseUrl: "https://matrix.agent.tchap.gouv.fr",
+            idBaseUrl: "https://matrix.agent.tchap.gouv.fr",
         });
         const plaf = PlatformPeg.get();
         const callbackUrl = plaf.getSSOCallbackUrl(tmpClient.getHomeserverUrl(), tmpClient.getIdentityServerUrl());

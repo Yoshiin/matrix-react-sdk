@@ -314,6 +314,9 @@ export default class GeneralUserSettingsTab extends React.Component {
                 <br />
                 <p className="mx_SettingsTab_subsectionText">
                     {passwordChangeText}
+                    <img className="tc_PasswordHelper" src={require('../../../../../../res/img/tchap/question_mark.svg')}
+                        width={25} height={25}
+                        title={ _t("Your password must include a lower-case letter, an upper-case letter, a number and a symbol and be at a minimum 8 characters in length.") } alt={""} />
                 </p>
                 {passwordChangeForm}
             </div>

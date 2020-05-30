@@ -40,7 +40,6 @@ export default class PasswordLogin extends React.Component {
         onPasswordChanged: PropTypes.func,
         loginIncorrect: PropTypes.bool,
         disableSubmit: PropTypes.bool,
-        serverConfig: PropTypes.instanceOf(ValidatedServerConfig).isRequired,
         busy: PropTypes.bool,
     };
 

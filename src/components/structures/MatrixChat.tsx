@@ -395,8 +395,8 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             return Lifecycle.loadSession({
                 fragmentQueryParams: this.props.startingFragmentQueryParams,
                 enableGuest: this.props.enableGuest,
-                guestHsUrl: this.getServerProperties().serverConfig.hsUrl,
-                guestIsUrl: this.getServerProperties().serverConfig.isUrl,
+                guestHsUrl: null,
+                guestIsUrl: null,
                 defaultDeviceDisplayName: this.props.defaultDeviceDisplayName,
             });
         }).then((loadedSession) => {
@@ -1228,7 +1228,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         } else if (MatrixClientPeg.currentUserIsJustRegistered()) {
             MatrixClientPeg.setJustRegisteredUserId(null);
 
-            if (this.props.config.welcomeUserId && getCurrentLanguage().startsWith("en")) {
+            if (this.props.config.welcomeUserId && getCurrentLanguage().startsWith("fr")) {
                 const welcomeUserRoom = await this.startWelcomeUserChat();
                 if (welcomeUserRoom === null) {
                     // We didn't redirect to the welcome user room, so show
