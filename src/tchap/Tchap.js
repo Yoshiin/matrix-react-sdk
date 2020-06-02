@@ -268,6 +268,12 @@ export default class Tchap {
         return finalRoom.roomId !== null ? finalRoom : undefined;
     }
 
+    static getRandomHSUrlFromList() {
+        const hostBase = TchapApi.hostBase;
+        const randomHs = this._shuffle(SdkConfig.get()['hs_url_list'])[0];
+        return hostBase + randomHs;
+    }
+
     /**
      * A fetch with a timeout option and an always resolver.
      * @param {string} url The url to fetch.

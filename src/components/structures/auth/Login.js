@@ -64,18 +64,12 @@ export default createReactClass({
         // If true, the component will consider itself busy.
         busy: PropTypes.bool,
 
-        // Secondary HS which we try to log into if the user is using
-        // the default HS but login fails. Useful for migrating to a
-        // different homeserver without confusing users.
-        fallbackHsUrl: PropTypes.string,
-
         defaultDeviceDisplayName: PropTypes.string,
 
         // login shouldn't know or care how registration, password recovery,
         // etc is done.
         onRegisterClick: PropTypes.func.isRequired,
         onForgotPasswordClick: PropTypes.func,
-        onServerConfigChange: PropTypes.func.isRequired,
 
         isSyncing: PropTypes.bool,
     },
@@ -115,8 +109,9 @@ export default createReactClass({
         this._stepRendererMap = {
             'm.login.password': this._renderPasswordStep,
         };
-        let urls = "https://matrix.agent.tchap.gouv.fr"
-        this._initLoginLogic(urls, urls);
+        const randomHS = Tchap.getRandomHSUrlFromList();
+
+        this._initLoginLogic(randomHS, randomHS);
     },
 
     componentWillUnmount: function() {
@@ -144,67 +139,39 @@ export default createReactClass({
 
         await Tchap.discoverPlatform(username).then(hs => {
             this._initLoginLogic(hs, hs);
-        });
-
-        this._loginLogic.loginViaPassword(
-            username, phoneCountry, phoneNumber, password,
-        ).then((data) => {
-            this.setState({serverIsAlive: true}); // it must be, we logged in.
-            this.props.onLoggedIn(data, password);
-        }, (error) => {
-            if (this._unmounted) {
-                return;
-            }
-            let errorText;
-
-            // Some error strings only apply for logging in
-            const usingEmail = username.indexOf("@") > 0;
-            if (error.httpStatus === 400 && usingEmail) {
-                errorText = _t('This homeserver does not support login using email address.');
-            } else if (error.errcode === 'M_RESOURCE_LIMIT_EXCEEDED') {
-                const errorTop = messageForResourceLimitError(
-                    error.data.limit_type,
-                    error.data.admin_contact, {
-                    'monthly_active_user': _td(
-                        "This homeserver has hit its Monthly Active User limit.",
-                    ),
-                    '': _td(
-                        "This homeserver has exceeded one of its resource limits.",
-                    ),
-                });
-                const errorDetail = messageForResourceLimitError(
-                    error.data.limit_type,
-                    error.data.admin_contact, {
-                    '': _td(
-                        "Please <a>contact your service administrator</a> to continue using this service.",
-                    ),
-                });
-                errorText = (
-                    <div>
-                        <div>{errorTop}</div>
-                        <div className="mx_Login_smallError">{errorDetail}</div>
-                    </div>
-                );
-            } else if (error.httpStatus === 401 || error.httpStatus === 403) {
-                if (error.errcode === 'M_USER_DEACTIVATED') {
-                    errorText = _t('This account has been deactivated.');
-                } else {
-                    errorText = _t('Incorrect username and/or password.');
+        }).then(() => {
+            this._loginLogic.loginViaPassword(
+                username, phoneCountry, phoneNumber, password,
+            ).then((data) => {
+                this.setState({serverIsAlive: true}); // it must be, we logged in.
+                this.props.onLoggedIn(data, password);
+            }, (error) => {
+                if (this._unmounted) {
+                    return;
                 }
-            } else {
-                // other errors, not specific to doing a password login
-                errorText = this._errorTextFromError(error);
-            }
+                let errorText;
 
-            this.setState({
-                busy: false,
-                busyLoggingIn: false,
-                errorText: errorText,
-                // 401 would be the sensible status code for 'incorrect password'
-                // but the login API gives a 403 https://matrix.org/jira/browse/SYN-744
-                // mentions this (although the bug is for UI auth which is not this)
-                // We treat both as an incorrect password
-                loginIncorrect: error.httpStatus === 401 || error.httpStatus === 403,
+                if (error.httpStatus === 401 || error.httpStatus === 403) {
+                    if (error.errcode === 'M_USER_DEACTIVATED') {
+                        errorText = _t('This account has been deactivated.');
+                    } else {
+                        errorText = _t('Incorrect username and/or password.');
+                    }
+                } else {
+                    // other errors, not specific to doing a password login
+                    errorText = this._errorTextFromError(error);
+                }
+
+                this.setState({
+                    busy: false,
+                    busyLoggingIn: false,
+                    errorText: errorText,
+                    // 401 would be the sensible status code for 'incorrect password'
+                    // but the login API gives a 403 https://matrix.org/jira/browse/SYN-744
+                    // mentions this (although the bug is for UI auth which is not this)
+                    // We treat both as an incorrect password
+                    loginIncorrect: error.httpStatus === 401 || error.httpStatus === 403,
+                });
             });
         });
     },
@@ -225,6 +192,10 @@ export default createReactClass({
         ev.preventDefault();
         ev.stopPropagation();
         this.props.onRegisterClick();
+    },
+
+    onTryRegisterClick: function(ev) {
+        this.onRegisterClick(ev);
     },
 
     _initLoginLogic: async function(hsUrl, isUrl) {
@@ -360,17 +331,11 @@ export default createReactClass({
     _renderPasswordStep: function() {
         const PasswordLogin = sdk.getComponent('auth.PasswordLogin');
 
-        let onEditServerDetailsClick = null;
-        // If custom URLs are allowed, wire up the server details edit link.
-        if (PHASES_ENABLED && !SdkConfig.get()['disable_custom_urls']) {
-            onEditServerDetailsClick = this.onEditServerDetailsClick;
-        }
-
         return (
             <PasswordLogin
                onSubmit={this.onPasswordLogin}
                onError={this.onPasswordLoginError}
-               onEditServerDetailsClick={onEditServerDetailsClick}
+               onEditServerDetailsClick={null}
                initialUsername={this.state.username}
                onUsernameChanged={this.onUsernameChanged}
                onUsernameBlur={this.onUsernameBlur}
