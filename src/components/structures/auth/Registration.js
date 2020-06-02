@@ -26,18 +26,13 @@ import { _t, _td } from '../../../languageHandler';
 import SdkConfig from '../../../SdkConfig';
 import { messageForResourceLimitError } from '../../../utils/ErrorUtils';
 import * as ServerType from '../../views/auth/ServerTypeSelector';
-import AutoDiscoveryUtils, {ValidatedServerConfig} from "../../../utils/AutoDiscoveryUtils";
 import classNames from "classnames";
 import * as Lifecycle from '../../../Lifecycle';
 import {MatrixClientPeg} from "../../../MatrixClientPeg";
 import AuthPage from "../../views/auth/AuthPage";
-import Login from "../../../Login";
-import dis from "../../../dispatcher";
 import Tchap from "../../../tchap/Tchap";
 
 // Phases
-// Show controls to configure server details
-const PHASE_SERVER_DETAILS = 0;
 // Show the appropriate registration flow(s) for the server
 const PHASE_REGISTRATION = 1;
 
@@ -337,24 +332,12 @@ export default createReactClass({
     },
 
     _makeRegisterRequest: function(auth) {
-        // We inhibit login if we're trying to register with an email address: this
-        // avoids a lot of complex race conditions that can occur if we try to log
-        // the user in one one or both of the tabs they might end up with after
-        // clicking the email link.
-        let inhibitLogin = Boolean(this.state.formVals.email);
-
-        // Only send inhibitLogin if we're sending username / pw params
-        // (Since we need to send no params at all to use the ones saved in the
-        // session).
-        if (!this.state.formVals.password) inhibitLogin = null;
-
         const registerParams = {
             email: this.state.formVals.email,
             password: this.state.formVals.password,
             initial_device_display_name: this.props.defaultDeviceDisplayName,
         };
         if (auth) registerParams.auth = auth;
-        if (inhibitLogin !== undefined && inhibitLogin !== null) registerParams.inhibit_login = inhibitLogin;
 
         return this.state.matrixClient.registerRequest(registerParams);
 
@@ -407,22 +390,11 @@ export default createReactClass({
                 <Spinner />
             </div>;
         } else if (this.state.flows.length) {
-            let onEditServerDetailsClick = null;
-            // If custom URLs are allowed and we haven't selected the Free server type, wire
-            // up the server details edit link.
-            if (
-                PHASES_ENABLED &&
-                !SdkConfig.get()['disable_custom_urls'] &&
-                this.state.serverType !== ServerType.FREE
-            ) {
-                onEditServerDetailsClick = this.onEditServerDetailsClick;
-            }
-
             return <RegistrationForm
                 defaultEmail={this.state.formVals.email}
                 defaultPassword={this.state.formVals.password}
                 onRegisterClick={this.onFormSubmit}
-                onEditServerDetailsClick={onEditServerDetailsClick}
+                onEditServerDetailsClick={null}
                 flows={this.state.flows}
                 serverConfig={null}
                 canSubmit={!this.state.serverErrorIsFatal}

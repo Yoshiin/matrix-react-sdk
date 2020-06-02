@@ -22,13 +22,9 @@ import createReactClass from 'create-react-class';
 import PropTypes from 'prop-types';
 import * as sdk from '../../../index';
 import * as Email from '../../../email';
-import { looksValid as phoneNumberLooksValid } from '../../../phonenumber';
-import Modal from '../../../Modal';
 import { _t } from '../../../languageHandler';
 import SdkConfig from '../../../SdkConfig';
-import { SAFE_LOCALPART_REGEX } from '../../../Registration';
 import withValidation from '../elements/Validation';
-import {ValidatedServerConfig} from "../../../utils/AutoDiscoveryUtils";
 
 const FIELD_EMAIL = 'field_email';
 const FIELD_PASSWORD = 'field_password';

@@ -22,11 +22,8 @@ import PropTypes from 'prop-types';
 import {_t, _td} from '../../../languageHandler';
 import * as sdk from '../../../index';
 import Login from '../../../Login';
-import SdkConfig from '../../../SdkConfig';
-import { messageForResourceLimitError } from '../../../utils/ErrorUtils';
 import classNames from "classnames";
 import AuthPage from "../../views/auth/AuthPage";
-import {ValidatedServerConfig} from "../../../utils/AutoDiscoveryUtils";
 import Tchap from "../../../tchap/Tchap";
 
 // Phases
