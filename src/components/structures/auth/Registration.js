@@ -33,6 +33,7 @@ import {MatrixClientPeg} from "../../../MatrixClientPeg";
 import AuthPage from "../../views/auth/AuthPage";
 import Login from "../../../Login";
 import dis from "../../../dispatcher";
+import Tchap from "../../../tchap/Tchap";
 
 // Phases
 // Show controls to configure server details
@@ -58,18 +59,14 @@ export default createReactClass({
         sessionId: PropTypes.string,
         makeRegistrationUrl: PropTypes.func.isRequired,
         idSid: PropTypes.string,
-        serverConfig: PropTypes.instanceOf(ValidatedServerConfig).isRequired,
         brand: PropTypes.string,
         email: PropTypes.string,
         // registration shouldn't know or care how login is done.
         onLoginClick: PropTypes.func.isRequired,
-        onServerConfigChange: PropTypes.func.isRequired,
         defaultDeviceDisplayName: PropTypes.string,
     },
 
     getInitialState: function() {
-        const serverType = ServerType.getTypeFromServerConfig(this.props.serverConfig);
-
         return {
             busy: false,
             errorText: null,
@@ -88,7 +85,6 @@ export default createReactClass({
             // If we've been given a session ID, we're resuming
             // straight back into UI auth
             doingUIAuth: Boolean(this.props.sessionId),
-            serverType,
             // Phase of the overall registration dialog.
             phase: PHASE_REGISTRATION,
             flows: null,
@@ -127,66 +123,12 @@ export default createReactClass({
 
     // TODO: [REACT-WARNING] Replace with appropriate lifecycle event
     UNSAFE_componentWillReceiveProps(newProps) {
-        if (newProps.serverConfig.hsUrl === this.props.serverConfig.hsUrl &&
-            newProps.serverConfig.isUrl === this.props.serverConfig.isUrl) return;
-
-        this._replaceClient(newProps.serverConfig);
-
-        // Handle cases where the user enters "https://matrix.org" for their server
-        // from the advanced option - we should default to FREE at that point.
-        const serverType = ServerType.getTypeFromServerConfig(newProps.serverConfig);
-        if (serverType !== this.state.serverType) {
-            // Reset the phase to default phase for the server type.
-            this.setState({
-                serverType,
-                phase: this.getDefaultPhaseForServerType(serverType),
-            });
-        }
-    },
-
-    getDefaultPhaseForServerType(type) {
-        switch (type) {
-            case ServerType.FREE: {
-                // Move directly to the registration phase since the server
-                // details are fixed.
-                return PHASE_REGISTRATION;
-            }
-            case ServerType.PREMIUM:
-            case ServerType.ADVANCED:
-                return PHASE_SERVER_DETAILS;
-        }
-    },
-
-    onServerTypeChange(type) {
         this.setState({
-            serverType: type,
-        });
-
-        // When changing server types, set the HS / IS URLs to reasonable defaults for the
-        // the new type.
-        switch (type) {
-            case ServerType.FREE: {
-                const { serverConfig } = ServerType.TYPES.FREE;
-                this.props.onServerConfigChange(serverConfig);
-                break;
-            }
-            case ServerType.PREMIUM:
-                // We can accept whatever server config was the default here as this essentially
-                // acts as a slightly different "custom server"/ADVANCED option.
-                break;
-            case ServerType.ADVANCED:
-                // Use the default config from the config
-                this.props.onServerConfigChange(SdkConfig.get()["validated_server_config"]);
-                break;
-        }
-
-        // Reset the phase to default phase for the server type.
-        this.setState({
-            phase: this.getDefaultPhaseForServerType(type),
+            phase: PHASE_REGISTRATION,
         });
     },
 
-    _replaceClient: async function(serverConfig) {
+    _replaceClient: async function(hsUrl) {
         this.setState({
             errorText: null,
             serverDeadError: null,
@@ -195,32 +137,15 @@ export default createReactClass({
             // the UI auth component while we don't have a matrix client)
             busy: true,
         });
-        if (!serverConfig) serverConfig = this.props.serverConfig;
 
-        // Do a liveliness check on the URLs
-        try {
-            await AutoDiscoveryUtils.validateServerConfigWithStaticUrls(
-                serverConfig.hsUrl,
-                serverConfig.isUrl,
-            );
-            this.setState({
-                serverIsAlive: true,
-                serverErrorIsFatal: false,
-            });
-        } catch (e) {
-            this.setState({
-                busy: false,
-                ...AutoDiscoveryUtils.authComponentStateForError(e, "register"),
-            });
-            if (this.state.serverErrorIsFatal) {
-                return; // Server is dead - do not continue.
-            }
+        let serverUrl = hsUrl;
+        if (!hsUrl) {
+            serverUrl = Tchap.getRandomHSUrlFromList();
         }
 
-        const {hsUrl, isUrl} = serverConfig;
         const cli = Matrix.createClient({
-            baseUrl: hsUrl,
-            idBaseUrl: isUrl,
+            baseUrl: serverUrl,
+            idBaseUrl: serverUrl,
         });
 
         let serverRequiresIdServer = true;
@@ -252,31 +177,6 @@ export default createReactClass({
                 this.setState({
                     flows: e.data.flows,
                 });
-            } else if (e.httpStatus === 403 && e.errcode === "M_UNKNOWN") {
-                // At this point registration is pretty much disabled, but before we do that let's
-                // quickly check to see if the server supports SSO instead. If it does, we'll send
-                // the user off to the login page to figure their account out.
-                try {
-                    const loginLogic = new Login(hsUrl, isUrl, null, {
-                        defaultDeviceDisplayName: "riot login check", // We shouldn't ever be used
-                    });
-                    const flows = await loginLogic.getFlows();
-                    const hasSsoFlow = flows.find(f => f.type === 'm.login.sso' || f.type === 'm.login.cas');
-                    if (hasSsoFlow) {
-                        // Redirect to login page - server probably expects SSO only
-                        dis.dispatch({action: 'start_login'});
-                    } else {
-                        this.setState({
-                            serverErrorIsFatal: true, // fatal because user cannot continue on this server
-                            errorText: _t("Registration has been disabled on this homeserver."),
-                            // add empty flows array to get rid of spinner
-                            flows: [],
-                        });
-                    }
-                } catch (e) {
-                    console.error("Failed to get login flows to check for SSO support", e);
-                    showGenericError(e);
-                }
             } else {
                 console.log("Unable to query for supported registration methods.", e);
                 showGenericError(e);
@@ -285,11 +185,15 @@ export default createReactClass({
     },
 
     onFormSubmit: function(formVals) {
-        this.setState({
-            errorText: "",
-            busy: true,
-            formVals: formVals,
-            doingUIAuth: true,
+        Tchap.discoverPlatform(formVals.email).then(hs => {
+            this._replaceClient(hs);
+        }).then(() => {
+            this.setState({
+                errorText: "",
+                busy: true,
+                formVals: formVals,
+                doingUIAuth: true,
+            });
         });
     },
 
@@ -297,7 +201,7 @@ export default createReactClass({
         return this.state.matrixClient.requestRegisterEmailToken(
             emailAddress,
             clientSecret,
-            sendAttempt,
+            1,
             this.props.makeRegistrationUrl({
                 client_secret: clientSecret,
                 hs_url: this.state.matrixClient.getHomeserverUrl(),
@@ -432,20 +336,6 @@ export default createReactClass({
         });
     },
 
-    async onServerDetailsNextPhaseClick() {
-        this.setState({
-            phase: PHASE_REGISTRATION,
-        });
-    },
-
-    onEditServerDetailsClick(ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        this.setState({
-            phase: PHASE_SERVER_DETAILS,
-        });
-    },
-
     _makeRegisterRequest: function(auth) {
         // We inhibit login if we're trying to register with an email address: this
         // avoids a lot of complex race conditions that can occur if we try to log
@@ -459,20 +349,20 @@ export default createReactClass({
         if (!this.state.formVals.password) inhibitLogin = null;
 
         const registerParams = {
-            username: this.state.formVals.username,
+            email: this.state.formVals.email,
             password: this.state.formVals.password,
             initial_device_display_name: this.props.defaultDeviceDisplayName,
         };
         if (auth) registerParams.auth = auth;
         if (inhibitLogin !== undefined && inhibitLogin !== null) registerParams.inhibit_login = inhibitLogin;
+
         return this.state.matrixClient.registerRequest(registerParams);
+
     },
 
     _getUIAuthInputs: function() {
         return {
             emailAddress: this.state.formVals.email,
-            phoneCountry: this.state.formVals.phoneCountry,
-            phoneNumber: this.state.formVals.phoneNumber,
         };
     },
 
@@ -529,15 +419,12 @@ export default createReactClass({
             }
 
             return <RegistrationForm
-                defaultUsername={this.state.formVals.username}
                 defaultEmail={this.state.formVals.email}
-                defaultPhoneCountry={this.state.formVals.phoneCountry}
-                defaultPhoneNumber={this.state.formVals.phoneNumber}
                 defaultPassword={this.state.formVals.password}
                 onRegisterClick={this.onFormSubmit}
                 onEditServerDetailsClick={onEditServerDetailsClick}
                 flows={this.state.flows}
-                serverConfig={this.props.serverConfig}
+                serverConfig={null}
                 canSubmit={!this.state.serverErrorIsFatal}
                 serverRequiresIdServer={this.state.serverRequiresIdServer}
             />;

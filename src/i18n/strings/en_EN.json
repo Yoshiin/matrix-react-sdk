@@ -1900,7 +1900,7 @@
     "No identity server is configured so you cannot add an email address in order to reset your password in the future.": "No identity server is configured so you cannot add an email address in order to reset your password in the future.",
     "If you don't specify an email address, you won't be able to reset your password. Are you sure?": "If you don't specify an email address, you won't be able to reset your password. Are you sure?",
     "Use an email address to recover your account": "Use an email address to recover your account",
-    "Enter email address (required on this homeserver)": "Enter email address (required on this homeserver)",
+    "Enter email address": "Enter email address",
     "Doesn't look like a valid email address": "Doesn't look like a valid email address",
     "Enter password": "Enter password",
     "Password is allowed, but unsafe": "Password is allowed, but unsafe",

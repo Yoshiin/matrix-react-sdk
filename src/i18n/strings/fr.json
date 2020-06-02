@@ -1440,7 +1440,7 @@
     "Rotate Right": "Tourner à droite",
     "View Servers in Room": "Voir les serveurs dans le salon",
     "Use an email address to recover your account": "Utiliser une adresse e-mail pour récupérer votre compte",
-    "Enter email address (required on this homeserver)": "Saisir l’adresse e-mail (obligatoire sur ce serveur d’accueil)",
+    "Enter email address": "Saisir l’adresse e-mail",
     "Doesn't look like a valid email address": "Cela ne ressemble pas a une adresse e-mail valide",
     "Enter password": "Saisir le mot de passe",
     "Password is allowed, but unsafe": "Ce mot de passe est autorisé, mais peu sûr",
