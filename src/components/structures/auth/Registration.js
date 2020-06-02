@@ -180,15 +180,11 @@ export default createReactClass({
     },
 
     onFormSubmit: function(formVals) {
-        Tchap.discoverPlatform(formVals.email).then(hs => {
-            this._replaceClient(hs);
-        }).then(() => {
-            this.setState({
-                errorText: "",
-                busy: true,
-                formVals: formVals,
-                doingUIAuth: true,
-            });
+        this.setState({
+            errorText: "",
+            busy: true,
+            formVals: formVals,
+            doingUIAuth: true,
         });
     },
 
@@ -331,16 +327,30 @@ export default createReactClass({
         });
     },
 
-    _makeRegisterRequest: function(auth) {
-        const registerParams = {
-            email: this.state.formVals.email,
-            password: this.state.formVals.password,
-            initial_device_display_name: this.props.defaultDeviceDisplayName,
-        };
-        if (auth) registerParams.auth = auth;
-
-        return this.state.matrixClient.registerRequest(registerParams);
-
+    _makeRegisterRequest: async function(auth) {
+        if (this.state.formVals.email) {
+            return Tchap.discoverPlatform(this.state.formVals.email).then(hs => {
+                if (hs !== this.state.matrixClient.baseUrl) {
+                    return this._replaceClient(hs);
+                }
+            }).then(() => {
+                const registerParams = {
+                    email: this.state.formVals.email,
+                    password: this.state.formVals.password,
+                    initial_device_display_name: this.props.defaultDeviceDisplayName,
+                };
+                if (auth) registerParams.auth = auth;
+                return this.state.matrixClient.registerRequest(registerParams);
+            })
+        } else {
+            const registerParams = {
+                email: this.state.formVals.email,
+                password: this.state.formVals.password,
+                initial_device_display_name: this.props.defaultDeviceDisplayName,
+            };
+            if (auth) registerParams.auth = auth;
+            return this.state.matrixClient.registerRequest(registerParams);
+        }
     },
 
     _getUIAuthInputs: function() {
