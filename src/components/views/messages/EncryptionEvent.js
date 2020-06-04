@@ -32,9 +32,7 @@ export default class EncryptionEvent extends React.Component {
             body = <div>
                 <div className="mx_cryptoEvent_title">{_t("Encryption enabled")}</div>
                 <div className="mx_cryptoEvent_subtitle">
-                    {_t(
-                        "Messages in this room are end-to-end encrypted. ",
-                    )}
+                    {_t("Messages in this room are end-to-end encrypted.")}
                 </div>
             </div>;
         } else {
