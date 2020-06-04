@@ -111,3 +111,11 @@
     top: 7px;
     left: 5px;
 }
+
+.mx_cryptoEvent {
+    &.mx_cryptoEvent_icon::after {
+        background-image: url("$(res)/img/tchap/e2e/padlock-encrypted_normal.svg");
+        width: 12px;
+        height: 16px;
+    }
+}

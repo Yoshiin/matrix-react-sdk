@@ -1078,7 +1078,6 @@ export default createReactClass({
         }
 
         let roomMemberDetails = null;
-        let e2eIconElement;
 
         if (this.props.member.roomId) { // is in room
             const PowerSelector = sdk.getComponent('elements.PowerSelector');
@@ -1096,11 +1095,6 @@ export default createReactClass({
                     {statusLabel}
                 </div>
             </div>;
-
-            const isEncrypted = this.context.isRoomEncrypted(this.props.member.roomId);
-            if (this.state.e2eStatus && isEncrypted) {
-                e2eIconElement = (<E2EIcon status={this.state.e2eStatus} isUser={true} />);
-            }
         }
 
         const {member} = this.props;
@@ -1125,7 +1119,6 @@ export default createReactClass({
             <div className="mx_MemberInfo" role="tabpanel">
                 <div className="mx_MemberInfo_name">
                     { backButton }
-                    { e2eIconElement }
                     <h2>{ memberName }</h2>
                 </div>
                 { avatarElement }
