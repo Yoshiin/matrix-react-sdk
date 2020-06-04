@@ -134,10 +134,6 @@ export default function createRoom(opts) {
     let modal;
     if (opts.spinner) modal = Modal.createDialog(Loader, null, 'mx_Dialog_spinner');
 
-    console.error("createOpts");
-    console.dir(createOpts);
-
-
     let roomId;
     return client.createRoom(createOpts).finally(function() {
         if (modal) modal.close();

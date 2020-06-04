@@ -42,6 +42,7 @@ const eventTileTypes = {
     'm.key.verification.cancel': 'messages.MKeyVerificationConclusion',
     'm.key.verification.done': 'messages.MKeyVerificationConclusion',
     'm.room.encryption': 'messages.EncryptionEvent',
+    'im.vector.room.access_rules': 'messages.AccessRulesEvent',
     'm.call.invite': 'messages.TextualEvent',
     'm.call.answer': 'messages.TextualEvent',
     'm.call.hangup': 'messages.TextualEvent',
@@ -49,6 +50,7 @@ const eventTileTypes = {
 
 const stateEventTileTypes = {
     'm.room.encryption': 'messages.EncryptionEvent',
+    'im.vector.room.access_rules': 'messages.AccessRulesEvent',
     'm.room.canonical_alias': 'messages.TextualEvent',
     'm.room.create': 'messages.RoomCreate',
     'm.room.member': 'messages.TextualEvent',
@@ -615,7 +617,7 @@ export default createReactClass({
         // Info messages are basically information about commands processed on a room
         const isBubbleMessage = eventType.startsWith("m.key.verification") ||
             (eventType === "m.room.message" && msgtype && msgtype.startsWith("m.key.verification")) ||
-            (eventType === "m.room.encryption");
+            (eventType === "m.room.encryption") || eventType === "im.vector.room.access_rules";
         let isInfoMessage = (
             !isBubbleMessage && eventType !== 'm.room.message' &&
             eventType !== 'm.sticker' && eventType !== 'm.room.create'

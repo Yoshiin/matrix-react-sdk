@@ -863,6 +863,9 @@ class CreationGrouper {
             && (ev.getStateKey() !== createEvent.getSender() || ev.getContent()["membership"] !== "join")) {
             return false;
         }
+        if (ev.getType() === "im.vector.room.access_rules") {
+            return false;
+        }
         if (ev.isState() && ev.getSender() === createEvent.getSender()) {
             return true;
         }

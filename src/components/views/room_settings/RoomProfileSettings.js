@@ -155,6 +155,7 @@ export default class RoomProfileSettings extends React.Component {
     _onExternAllowedSwitchChange = () => {
         const self = this;
         const access_rules = this.state.access_rules;
+        const client = MatrixClientPeg.get();
         const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
         Modal.createTrackedDialog('Allow the externals to join this room', '', QuestionDialog, {
             title: _t('Allow the externals to join this room'),
@@ -164,7 +165,7 @@ export default class RoomProfileSettings extends React.Component {
                     self.setState({
                         access_rules: 'unrestricted'
                     });
-                    MatrixClientPeg.get().sendStateEvent(
+                    client.sendStateEvent(
                         self.props.roomId, "im.vector.room.access_rules",
                         { rule: 'unrestricted' },
                         "",
