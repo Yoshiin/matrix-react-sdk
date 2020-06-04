@@ -268,38 +268,9 @@ export default createReactClass({
                 (errCode ? " (" + errCode + ")" : "");
 
         if (err.cors === 'rejected') {
-            if (window.location.protocol === 'https:' &&
-                (this.props.serverConfig.hsUrl.startsWith("http:") ||
-                 !this.props.serverConfig.hsUrl.startsWith("http"))
-            ) {
-                errorText = <span>
-                    { _t("Can't connect to homeserver via HTTP when an HTTPS URL is in your browser bar. " +
-                        "Either use HTTPS or <a>enable unsafe scripts</a>.", {},
-                        {
-                            'a': (sub) => {
-                                return <a target="_blank" rel="noreferrer noopener"
-                                    href="https://www.google.com/search?&q=enable%20unsafe%20scripts"
-                                >
-                                    { sub }
-                                </a>;
-                            },
-                        },
-                    ) }
-                </span>;
-            } else {
-                errorText = <span>
-                    { _t("Can't connect to homeserver - please check your connectivity, ensure your " +
-                        "<a>homeserver's SSL certificate</a> is trusted, and that a browser extension " +
-                        "is not blocking requests.", {},
-                        {
-                            'a': (sub) =>
-                                <a target="_blank" rel="noreferrer noopener" href="#">
-                                    { sub }
-                                </a>,
-                        },
-                    ) }
-                </span>;
-            }
+            errorText = <span>
+                { _t("Homeserver unreachable.") }
+            </span>;
         }
 
         return errorText;

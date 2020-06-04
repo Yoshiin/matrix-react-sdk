@@ -45,7 +45,7 @@ export default createReactClass({
             noFederate: config.default_federate === false,
             nameIsValid: false,
             externAllowed: false,
-            externAllowedSwitchDisabled: !this.props.defaultPublic || true,
+            externAllowedSwitchDisabled: this.props.defaultPublic || false,
         };
     },
 
@@ -58,7 +58,7 @@ export default createReactClass({
             createOpts.preset = "public_chat";
             opts.guestAccess = false;
         }
-        if (this.state.externAllowed) {
+        if (this.state.externAllowed && !this.state.isPublic) {
             createOpts.access_rules = "unrestricted"
         }
         if (this.state.topic) {
@@ -140,8 +140,9 @@ export default createReactClass({
     onPublicChange(isPublic) {
         this.setState({
             isPublic,
-            externAllowedSwitchDisabled: !isPublic,
-            externAllowed: false
+            externAllowedSwitchDisabled: isPublic,
+            externAllowed: false,
+            noFederate: false
         });
     },
 
@@ -197,10 +198,20 @@ export default createReactClass({
         let domainParam = null;
         if (this.state.isPublic) {
             domainParam = (
-            <details ref={this.collectDetailsRef} className="mx_CreateRoomDialog_details">
-                <summary className="mx_CreateRoomDialog_details_summary">{ this.state.detailsOpen ? _t('Hide advanced') : _t('Show advanced') }</summary>
-                <LabelledToggleSwitch label={ _t('Block users on other matrix homeservers from joining this room (This setting cannot be changed later!)')} onChange={this.onNoFederateChange} value={this.state.noFederate} />
-            </details>
+                <LabelledToggleSwitch label={
+                    _t('Block users on other matrix homeservers from joining this room ' +
+                        '(This setting cannot be changed later!)')}
+                    onChange={this.onNoFederateChange} value={this.state.noFederate} />
+            );
+        }
+
+        let externAllowedParam = null;
+        if (!this.state.isPublic) {
+            externAllowedParam = (
+                <LabelledToggleSwitch value={this.state.externAllowed}
+                    onChange={ this.onExternAllowedSwitchChange }
+                    label={ _t("Allow the externals to join this room") }
+                    disabled={ this.state.externAllowedSwitchDisabled } />
             );
         }
 
@@ -215,10 +226,7 @@ export default createReactClass({
                         <Field label={ _t('Topic (optional)') } onChange={this.onTopicChange} value={this.state.topic} className="mx_CreateRoomDialog_topic" />
                         <LabelledToggleSwitch label={ _t("Make this room public")} onChange={this.onPublicChange} value={this.state.isPublic} />
                         { publicPrivateLabel }
-                        <LabelledToggleSwitch value={this.state.externAllowed}
-                                              onChange={ this.onExternAllowedSwitchChange }
-                                              label={ _t("Allow the externals to join this room") }
-                                              disabled={ this.state.externAllowedSwitchDisabled } />
+                        { externAllowedParam }
                         { domainParam }
                     </div>
                 </form>

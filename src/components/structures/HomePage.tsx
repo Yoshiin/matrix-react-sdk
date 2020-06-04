@@ -36,29 +36,13 @@ const HomePage = () => {
         return <EmbeddedPage className="mx_HomePage" url={pageUrl} scrollbar={true} />;
     }
 
-    const brandingConfig = config.branding;
-    let logoUrl = "themes/riot/img/logos/riot-logo.svg";
-    if (brandingConfig && brandingConfig.authHeaderLogoUrl) {
-        logoUrl = brandingConfig.authHeaderLogoUrl;
-    }
+    let logoUrl = "themes/tchap/img/logos/tchap-logo.svg";
 
-    const AccessibleButton = sdk.getComponent("elements.AccessibleButton");
     return <AutoHideScrollbar className="mx_HomePage mx_HomePage_default">
         <div className="mx_HomePage_default_wrapper">
-            <img src={logoUrl} alt="Riot" />
-            <h1>{ _t("Welcome to %(appName)s", { appName: config.brand || "Riot" }) }</h1>
-            <h4>{ _t("Liberate your communication") }</h4>
-            <div className="mx_HomePage_default_buttons">
-                <AccessibleButton onClick={onClickSendDm} className="mx_HomePage_button_sendDm">
-                    { _t("Send a Direct Message") }
-                </AccessibleButton>
-                <AccessibleButton onClick={onClickExplore} className="mx_HomePage_button_explore">
-                    { _t("Explore Public Rooms") }
-                </AccessibleButton>
-                <AccessibleButton onClick={onClickNewRoom} className="mx_HomePage_button_createGroup">
-                    { _t("Create a Group Chat") }
-                </AccessibleButton>
-            </div>
+            <img src={logoUrl} alt="Tchap" />
+            <h1>{ _t("Welcome to %(appName)s", { appName: config.brand || "Tchap" }) }</h1>
+            <h4>{ _t("State instant messaging") }</h4>
         </div>
     </AutoHideScrollbar>;
 };
