@@ -42,7 +42,6 @@ const eventTileTypes = {
     'm.key.verification.cancel': 'messages.MKeyVerificationConclusion',
     'm.key.verification.done': 'messages.MKeyVerificationConclusion',
     'm.room.encryption': 'messages.EncryptionEvent',
-    'im.vector.room.access_rules': 'messages.AccessRulesEvent',
     'm.call.invite': 'messages.TextualEvent',
     'm.call.answer': 'messages.TextualEvent',
     'm.call.hangup': 'messages.TextualEvent',
@@ -50,7 +49,6 @@ const eventTileTypes = {
 
 const stateEventTileTypes = {
     'm.room.encryption': 'messages.EncryptionEvent',
-    'im.vector.room.access_rules': 'messages.AccessRulesEvent',
     'm.room.canonical_alias': 'messages.TextualEvent',
     'm.room.create': 'messages.RoomCreate',
     'm.room.member': 'messages.TextualEvent',
@@ -68,6 +66,7 @@ const stateEventTileTypes = {
     'm.room.join_rules': 'messages.TextualEvent',
     'm.room.guest_access': 'messages.TextualEvent',
     'm.room.related_groups': 'messages.TextualEvent',
+    'im.vector.room.access_rules': 'messages.AccessRulesEvent',
 };
 
 // Add all the Mjolnir stuff to the renderer
@@ -610,6 +609,12 @@ export default createReactClass({
 
         //console.info("EventTile showUrlPreview for %s is %s", this.props.mxEvent.getId(), this.props.showUrlPreview);
 
+/*
+        if (this.props.mxEvent.getType() === "im.vector.room.access_rules" ) {
+            console.warn("EventTile %s for id %s", this.props.mxEvent.getType(), this.props.mxEvent.getId());
+            console.warn(this.props.mxEvent);
+        }*/
+
         const content = this.props.mxEvent.getContent();
         const msgtype = content.msgtype;
         const eventType = this.props.mxEvent.getType();
@@ -934,6 +939,11 @@ export function haveTileForEvent(e) {
 
     // No tile for replacement events since they update the original tile
     if (e.isRelation("m.replace")) return false;
+
+    if (e.getType() === "im.vector.room.access_rules" && e.event.content.rule === "restricted") {
+            return false;
+    }
+
 
     const handler = getHandlerTile(e);
     if (handler === undefined) return false;

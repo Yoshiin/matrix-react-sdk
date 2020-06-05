@@ -84,6 +84,7 @@ export default class SecurityRoomSettingsTab extends React.Component {
             'm.room.guest_access',
             'm.room.history_visibility',
             'm.room.encryption',
+            'im.vector.room.access_rules',
         ];
         if (refreshWhenTypes.includes(e.getType())) this.forceUpdate();
     };
