@@ -245,6 +245,9 @@ export default class Tchap {
             roomId: null,
             weight: 0,
         };
+
+        //if ( userId === email faire un resolve)
+
         for (const room of rooms) {
              const r = MatrixClientPeg.get().getRoom(room);
              if (r) {
