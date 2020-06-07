@@ -100,6 +100,7 @@ export default class MemberStatusMessageAvatar extends React.Component {
     render() {
         const avatar = <MemberAvatar
             member={this.props.member}
+            title={this.props.member.rawDisplayName}
             width={this.props.width}
             height={this.props.height}
             resizeMethod={this.props.resizeMethod}

@@ -198,7 +198,7 @@ export default createReactClass({
 
     getPowerLabel: function() {
         return _t("%(userName)s (power %(powerLevelNumber)s)", {
-            userName: this.props.member.userId,
+            userName: this.props.member.rawDisplayName,
             powerLevelNumber: this.props.member.powerLevel,
         });
     },
@@ -228,7 +228,7 @@ export default createReactClass({
         }
 
         const av = (
-            <MemberAvatar member={member} width={36} height={36} aria-hidden="true" />
+            <MemberAvatar title={this.props.member.rawDisplayName} member={member} width={36} height={36} aria-hidden="true" />
         );
 
         if (member.user) {
@@ -256,6 +256,11 @@ export default createReactClass({
         if (this.state.isRoomEncrypted) {
             e2eStatus = this.state.e2eStatus;
         }
+
+        console.error("this.getPowerLabel()")
+        console.error(this.getPowerLabel())
+        console.error("name")
+        console.error(name)
 
         return (
             <EntityTile

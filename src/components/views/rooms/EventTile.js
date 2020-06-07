@@ -715,6 +715,7 @@ export default createReactClass({
             avatar = (
                     <div className="mx_EventTile_avatar">
                         <MemberAvatar member={this.props.mxEvent.sender}
+                            title={this.props.mxEvent.sender.rawDisplayName}
                             width={avatarSize} height={avatarSize}
                             viewUserOnClick={true}
                         />

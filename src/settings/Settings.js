@@ -227,7 +227,7 @@ export const SETTINGS = {
     "enableSyntaxHighlightLanguageDetection": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td('Enable automatic language detection for syntax highlighting'),
-        default: false,
+        default: true,
     },
     "Pill.shouldShowPillAvatar": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
@@ -310,7 +310,7 @@ export const SETTINGS = {
     },
     "language": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS_WITH_CONFIG,
-        default: "en",
+        default: "fr",
     },
     "breadcrumb_rooms": {
         supportedLevels: ['account'],
@@ -509,7 +509,7 @@ export const SETTINGS = {
     },
     "showCallButtonsInComposer": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS_WITH_CONFIG,
-        default: true,
+        default: false,
     },
     "e2ee.manuallyVerifyAllSessions": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS,
