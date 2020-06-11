@@ -69,7 +69,8 @@
 }
 
 .mx_RoomTile_dm {
-    left: 32px;
+    left: 40px;
+    bottom: 10px;
 }
 
 .tc_RoomDirectory_roomPreview {
@@ -153,4 +154,180 @@
         grid-row: 2;
         font-size: $font-12px;
     }
+}
+
+.mx_TopLeftMenuButton_chevron {
+    margin: 0 7px 0 0;
+    min-width: 10px;
+}
+
+
+//==================== Design V3 ====================//
+.mx_LeftPanel {
+    background-color: #162d58;
+}
+
+.mx_RoomSubList_label > span {
+    color: #dddddd;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.mx_LeftPanel_explore .mx_AccessibleButton {
+    color: #dddddd;
+    &::before {
+        mask: url('$(res)/img/tchap/explore.svg');
+        background-color: #dddddd;
+    }
+    &:hover {
+        background-color: #273d64;
+    }
+}
+
+.mx_LeftPanel_exploreAndFilterRow input::placeholder {
+    color: #dddddd !important;
+}
+
+.mx_LeftPanel_exploreAndFilterRow {
+    border-bottom: 1px solid #35496e;
+}
+
+.mx_TopLeftMenuButton {
+    background-color: #162d58;
+    color: white;
+    border-bottom: none;
+    padding: 10px 4px;
+}
+
+.mx_SearchBox > input[type="text"].mx_textinput_icon.mx_textinput_search {
+    background-image: url('$(res)/img/tchap/feather-customised/search-input.svg');
+}
+
+.mx_SearchBox {
+    flex: 1 1 0;
+    min-width: 0;
+
+    &.mx_SearchBox_blurred:hover {
+        background-color: #273d64;
+    }
+    &:not(.mx_SearchBox_blurred) {
+        background-color: #273d64;
+        input {
+            color: #dddddd !important;
+        }
+        input::placeholder {
+            color: #61708b !important;
+        }
+    }
+    .mx_SearchBox_closeButton {
+        background-image: url('$(res)/img/tchap/icons-close.svg');
+    }
+}
+
+.mx_RoomTile_name {
+    color: #dddddd;
+    padding-left: 10px;
+    font-weight: bold;
+    font-size: medium;
+}
+
+.mx_RoomTile_subtext {
+    color: #dddddd;
+    padding: 0 0 0 11px;
+    margin-top: 6px;
+}
+
+.mx_RoomTile_selected {
+    border-radius: 0;
+    background-color: #35496e;
+    margin-top: -1px;
+}
+
+.mx_RoomList > .mx_ResizeHandle > div {
+    background: #35496e;
+}
+
+.mx_RoomList > .mx_ResizeHandle.mx_ResizeHandle_vertical {
+    padding-top: 4px;
+}
+
+.mx_RoomSubList_scroll {
+    padding: 0;
+}
+
+.mx_RoomTile {
+    min-height: 60px;
+    &:focus {
+        background-color: #35496e;
+    }
+    &::after {
+        content: "";
+        position: absolute;
+        left: 10%;
+        bottom: 0;
+        height: 1px;
+        width: 80%;
+        border-bottom: 1px solid #35496e;
+    }
+}
+
+.mx_RoomSubList {
+    height: auto !important;
+}
+
+.mx_RoomSubList_labelContainer {
+    padding-top: 10px;
+    border-radius: 4px;
+}
+
+.mx_ContextualMenu_top {
+    background-color: #273d64;
+    color: #dddddd;
+    -webkit-box-shadow: 4px 4px 4px 0 #273d64;
+    box-shadow: 4px 4px 4px 0 #273d64;
+}
+.mx_TopLeftMenu .mx_TopLeftMenu_section_withIcon {
+    font-size: 16px;
+    .mx_AccessibleButton::after {
+        background-color: #dddddd;
+        width: 22px;
+        height: 22px;
+        top: 5px;
+        left: 13px;
+    }
+    .mx_TopLeftMenu_icon_settings::after {
+        mask-image: url('$(res)/img/tchap/feather-customised/settings.svg');
+        mask-size: 22px;
+    }
+    .mx_TopLeftMenu_icon_signout::after {
+        mask-image: url('$(res)/img/tchap/feather-customised/sign-out.svg');
+        mask-size: 22px;
+    }
+    .mx_AccessibleButton:hover {
+        background-color: #35496e;
+    }
+}
+
+.mx_ContextualMenu.mx_ContextualMenu_withChevron_left {
+    background-color: #273d64;
+    color: #dddddd;
+}
+
+.mx_RoomTileContextMenu_notif_field.mx_AccessibleButton,
+.mx_RoomTileContextMenu_tag_field.mx_AccessibleButton,
+.mx_RoomTileContextMenu_leave.mx_AccessibleButton {
+    &:hover {
+        background-color: #35496e;
+    }
+}
+.mx_ContextualMenu_chevron_left {
+    border-right: 8px solid #273d64;
+}
+
+.mx_RoomTileContextMenu_separator {
+    border-color: #35496e;
+}
+
+.mx_RoomHeader_wrapper {
+    height: 72px;
 }

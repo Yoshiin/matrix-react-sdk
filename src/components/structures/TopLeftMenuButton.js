@@ -25,7 +25,7 @@ import { _t } from '../../languageHandler';
 import dis from "../../dispatcher";
 import {ContextMenu, ContextMenuButton} from "./ContextMenu";
 
-const AVATAR_SIZE = 28;
+const AVATAR_SIZE = 44;
 
 export default class TopLeftMenuButton extends React.Component {
     static propTypes = {

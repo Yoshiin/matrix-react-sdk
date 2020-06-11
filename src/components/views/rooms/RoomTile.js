@@ -402,8 +402,13 @@ export default createReactClass({
         const badges = notifBadges || mentionBadges;
 
         let subtext = null;
-        if (this._shouldShowStatusMessage()) {
+        // Subtext will be use to show room topic.
+        /*if (this._shouldShowStatusMessage()) {
             subtext = this.state.statusMessage;
+        }*/
+        const ev = this.props.room.currentState.getStateEvents('m.room.topic', '');
+        if (ev) {
+            subtext = ev.getContent().topic;
         }
 
         const isMenuDisplayed = Boolean(this.state.contextMenuPosition);
@@ -421,6 +426,7 @@ export default createReactClass({
             'mx_RoomTile_noBadges': !badges,
             'mx_RoomTile_transparent': this.props.transparent,
             'mx_RoomTile_hasSubtext': subtext && !this.props.collapsed,
+            'tc_RoomTile_direct': Boolean(dmUserId)
         });
 
         const avatarClasses = classNames({
@@ -529,7 +535,7 @@ export default createReactClass({
 
         let encryptedIndicator = null;
         if (MatrixClientPeg.get().isRoomEncrypted(this.props.room.roomId)) {
-            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_room.svg")} className="mx_RoomTile_dm" width="10" height="12" alt="encrypted" />;
+            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_room_white.svg")} className="mx_RoomTile_dm" width="10" height="12" alt="encrypted" />;
         }
 
         let mainAvatarClasses = avatarClasses;
@@ -557,7 +563,7 @@ export default createReactClass({
                     >
                         <div className={mainAvatarClasses}>
                             <div className="mx_RoomTile_avatar_container">
-                                <RoomAvatar room={this.props.room} width={24} height={24} />
+                                <RoomAvatar room={this.props.room} width={34} height={34} />
                             </div>
                         </div>
                         { encryptedIndicator }

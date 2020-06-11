@@ -224,7 +224,7 @@ export default createReactClass({
         }
         const topicElement =
             <div className="mx_RoomHeader_topic" ref={this._topic} title={topic} dir="auto">{ topic }</div>;
-        const avatarSize = 24;
+        const avatarSize = 34;
         let roomAvatar;
         if (this.props.room) {
             roomAvatar = (<RoomAvatar

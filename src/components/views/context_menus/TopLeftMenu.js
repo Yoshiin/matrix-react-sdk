@@ -73,9 +73,6 @@ export default class TopLeftMenu extends React.Component {
         );
 
         return <div className="mx_TopLeftMenu" ref={this.props.containerRef} role="menu">
-            <div className="mx_TopLeftMenu_section_noIcon" aria-readonly={true} tabIndex={-1}>
-                <div>{this.props.displayName}</div>
-            </div>
             <ul className="mx_TopLeftMenu_section_withIcon" role="none">
                 {homePageItem}
                 {settingsItem}
