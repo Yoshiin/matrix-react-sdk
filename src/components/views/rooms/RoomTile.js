@@ -435,6 +435,7 @@ export default createReactClass({
 
         const badgeClasses = classNames({
             'mx_RoomTile_badge': true,
+            'tc_RoomTile_badge': true,
             'mx_RoomTile_badgeButton': this.state.badgeHover || isMenuDisplayed,
         });
 
@@ -461,7 +462,7 @@ export default createReactClass({
 
             subtextLabel = subtext ? <span className="mx_RoomTile_subtext">{ subtext }</span> : null;
             // XXX: this is a workaround for Firefox giving this div a tabstop :( [tabIndex]
-            label = <div title={name} className={nameClasses} tabIndex={-1} dir="auto">{ name }</div>;
+            label = <div title={name} className={nameClasses} tabIndex={-1} dir="auto">{ name }{ badge }</div>;
         } else if (this.state.hover) {
             const Tooltip = sdk.getComponent("elements.Tooltip");
             tooltip = <Tooltip className="mx_RoomTile_tooltip" label={this.props.room.name} dir="auto" />;
@@ -574,7 +575,6 @@ export default createReactClass({
                             </div>
                             { dmOnline }
                             { contextMenuButton }
-                            { badge }
                         </div>
                         { /* { incomingCallBox } */ }
                         { tooltip }

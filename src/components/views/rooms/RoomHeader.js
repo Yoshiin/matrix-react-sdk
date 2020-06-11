@@ -168,8 +168,6 @@ export default createReactClass({
         const dmUserId = DMRoomMap.shared().getUserIdForRoomId(this.props.room.roomId);
         let classes = "tc_RoomHeader_roomType";
         let translation = "";
-        console.error("this._getJoinRules(this.props.room)");
-        console.error(this._getJoinRules(this.props.room));
         if (dmUserId) {
             classes += " tc_RoomHeader_roomType_direct";
             translation = _t("Direct");
@@ -359,10 +357,6 @@ export default createReactClass({
                 { searchButton }
             </div>;
 
-
-        // TO MOVE FIXME
-        console.error("this.props.room")
-        console.error(`Room ${this.props.room.name} is ${Tchap.getAccessRules(this.props.room.roomId)}`)
         const memberCount = (<div className="tc_RoomHeader_memberCount">{ `${this.props.room.getJoinedMemberCount()} ${_t("Members")}` }</div>);
         const roomType = this.renderRoomTypeElement();
 

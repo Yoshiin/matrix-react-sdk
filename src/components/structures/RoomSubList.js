@@ -343,6 +343,7 @@ export default class RoomSubList extends React.PureComponent {
                 if (!this.props.collapsed) {
                     const badgeClasses = classNames({
                         'mx_RoomSubList_badge': true,
+                        'tc_RoomSubList_badge': true,
                         'mx_RoomSubList_badgeHighlight': subListNotifHighlight,
                     });
                     // Wrap the contents in a div and apply styles to the child div so that the browser default outline works

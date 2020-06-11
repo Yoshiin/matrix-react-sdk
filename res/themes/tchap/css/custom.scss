@@ -315,6 +315,22 @@
     font-weight: bold;
 }
 
+.tc_RoomTile_badge {
+    display: inline;
+    margin-left: 10px;
+    padding: 0 8px 0 8px;
+    background-color: #dddddd !important;
+    color: #162d58 !important;
+    font-weight: bold;
+}
+
+.tc_RoomSubList_badge > div {
+    padding: 0 8px 0 8px;
+    background-color: #dddddd !important;
+    color: #162d58 !important;
+    font-weight: bold;
+}
+
 // Context Menus
 .mx_ContextualMenu_top {
     background-color: #273d64;
