@@ -163,14 +163,10 @@
 
 
 //==================== Design V3 ====================//
+
+// Left Panel Main
 .mx_LeftPanel {
     background-color: #162d58;
-}
-
-.mx_RoomSubList_label > span {
-    color: #dddddd;
-    font-weight: bold;
-    font-size: 14px;
 }
 
 .mx_LeftPanel_explore .mx_AccessibleButton {
@@ -192,11 +188,34 @@
     border-bottom: 1px solid #35496e;
 }
 
+// Top Bar
 .mx_TopLeftMenuButton {
     background-color: #162d58;
     color: white;
     border-bottom: none;
     padding: 10px 4px;
+}
+
+.mx_TopLeftMenu .mx_TopLeftMenu_section_withIcon {
+    font-size: 16px;
+    .mx_AccessibleButton::after {
+        background-color: #dddddd;
+        width: 22px;
+        height: 22px;
+        top: 5px;
+        left: 13px;
+    }
+    .mx_TopLeftMenu_icon_settings::after {
+        mask-image: url('$(res)/img/tchap/feather-customised/settings.svg');
+        mask-size: 22px;
+    }
+    .mx_TopLeftMenu_icon_signout::after {
+        mask-image: url('$(res)/img/tchap/feather-customised/sign-out.svg');
+        mask-size: 22px;
+    }
+    .mx_AccessibleButton:hover {
+        background-color: #35496e;
+    }
 }
 
 .mx_SearchBox > input[type="text"].mx_textinput_icon.mx_textinput_search {
@@ -224,22 +243,15 @@
     }
 }
 
-.mx_RoomTile_name {
+// Room List / SubList
+.mx_RoomSubList_label > span {
     color: #dddddd;
-    padding-left: 10px;
     font-weight: bold;
-    font-size: medium;
+    font-size: 14px;
 }
 
-.mx_RoomTile_subtext {
-    color: #dddddd;
-    padding: 0 0 0 11px;
-    margin-top: 6px;
-}
-
-.mx_RoomTile_selected {
-    border-radius: 0;
-    background-color: #35496e;
+.mx_RoomList {
+    overflow-y: scroll;
 }
 
 .mx_RoomList > .mx_ResizeHandle > div {
@@ -254,6 +266,16 @@
     padding: 0;
 }
 
+.mx_RoomSubList {
+    height: auto !important;
+}
+
+.mx_RoomSubList_labelContainer {
+    padding-top: 10px;
+    border-radius: 4px;
+}
+
+// Room Tile
 .mx_RoomTile {
     min-height: 60px;
     margin-top: -1px;
@@ -271,42 +293,37 @@
     }
 }
 
-.mx_RoomSubList {
-    height: auto !important;
+.mx_RoomTile_name {
+    color: #dddddd;
+    padding-left: 10px;
+    //font-weight: bold;
+    font-size: medium;
 }
 
-.mx_RoomSubList_labelContainer {
-    padding-top: 10px;
-    border-radius: 4px;
+.mx_RoomTile_subtext {
+    color: #dddddd;
+    padding: 0 0 0 11px;
+    margin-top: 6px;
 }
 
+.mx_RoomTile_selected {
+    border-radius: 0;
+    background-color: #35496e;
+}
+
+.mx_RoomTile_unread .mx_RoomTile_name, .mx_RoomTile_highlight .mx_RoomTile_name {
+    color: #dddddd;
+    font-weight: bold;
+}
+
+// Context Menus
 .mx_ContextualMenu_top {
     background-color: #273d64;
     color: #dddddd;
     -webkit-box-shadow: 4px 4px 4px 0 #273d64;
     box-shadow: 4px 4px 4px 0 #273d64;
 }
-.mx_TopLeftMenu .mx_TopLeftMenu_section_withIcon {
-    font-size: 16px;
-    .mx_AccessibleButton::after {
-        background-color: #dddddd;
-        width: 22px;
-        height: 22px;
-        top: 5px;
-        left: 13px;
-    }
-    .mx_TopLeftMenu_icon_settings::after {
-        mask-image: url('$(res)/img/tchap/feather-customised/settings.svg');
-        mask-size: 22px;
-    }
-    .mx_TopLeftMenu_icon_signout::after {
-        mask-image: url('$(res)/img/tchap/feather-customised/sign-out.svg');
-        mask-size: 22px;
-    }
-    .mx_AccessibleButton:hover {
-        background-color: #35496e;
-    }
-}
+
 
 .mx_ContextualMenu.mx_ContextualMenu_withChevron_left {
     background-color: #273d64;
@@ -328,6 +345,7 @@
     border-color: #35496e;
 }
 
+// Room Header
 .mx_RoomHeader_wrapper {
     height: 72px;
 }
