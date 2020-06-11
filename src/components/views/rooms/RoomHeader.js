@@ -152,6 +152,43 @@ export default createReactClass({
         return !(currentPinEvent.getContent().pinned && currentPinEvent.getContent().pinned.length <= 0);
     },
 
+    _getJoinRules: function(room) {
+        const stateEventType = "m.room.join_rules";
+        const keyName = "join_rule";
+        const defaultValue = "public";
+        const event = room.currentState.getStateEvents(stateEventType, '');
+        if (!event) {
+            return defaultValue;
+        }
+        const content = event.getContent();
+        return keyName in content ? content[keyName] : defaultValue;
+    },
+
+    renderRoomTypeElement: function() {
+        const dmUserId = DMRoomMap.shared().getUserIdForRoomId(this.props.room.roomId);
+        let classes = "tc_RoomHeader_roomType";
+        let translation = "";
+        console.error("this._getJoinRules(this.props.room)");
+        console.error(this._getJoinRules(this.props.room));
+        if (dmUserId) {
+            classes += " tc_RoomHeader_roomType_direct";
+            translation = _t("Direct");
+        } else if (this._getJoinRules(this.props.room) === "public") {
+            classes += " tc_RoomHeader_roomType_public";
+            translation = _t("Public");
+        } else if (this._getJoinRules(this.props.room) === "invite" &&
+            Tchap.getAccessRules(this.props.room.roomId) === "restricted") {
+            classes += " tc_RoomHeader_roomType_restricted";
+            translation = _t("Private");
+        } else if (this._getJoinRules(this.props.room) === "invite" &&
+            Tchap.getAccessRules(this.props.room.roomId) === "unrestricted") {
+            classes += " tc_RoomHeader_roomType_unrestricted";
+            translation = _t("External");
+        }
+
+        return (<div className={classes}>{translation}</div>);
+    },
+
     render: function() {
         const RoomAvatar = sdk.getComponent("avatars.RoomAvatar");
 
@@ -301,7 +338,7 @@ export default createReactClass({
 
         let encryptedIndicator = null;
         if (MatrixClientPeg.get().isRoomEncrypted(this.props.room.roomId)) {
-            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_room.svg")} width="10" height="12" alt="encrypted" />;
+            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_room.svg")} width="10" height="12" alt="encrypted" className="tc_RoomHeader_encryptionInfos" />;
         }
 
         let roomAccessibility;
@@ -322,15 +359,32 @@ export default createReactClass({
                 { searchButton }
             </div>;
 
+
+        // TO MOVE FIXME
+        console.error("this.props.room")
+        console.error(`Room ${this.props.room.name} is ${Tchap.getAccessRules(this.props.room.roomId)}`)
+        const memberCount = (<div className="tc_RoomHeader_memberCount">{ `${this.props.room.getJoinedMemberCount()} ${_t("Members")}` }</div>);
+        const roomType = this.renderRoomTypeElement();
+
+        //{ roomAccessibility }
+
         return (
             <div className="mx_RoomHeader light-panel">
                 <div className="mx_RoomHeader_wrapper" aria-owns="mx_RightPanel">
                     <div className={mainAvatarClasses}>{ roomAvatar }</div>
                     { encryptedIndicator }
-                    { name }
-                    { topicElement }
+                    <div className="tc_RoomHeader_infos">
+                        <div className="tc_RoomHeader_classicInfos">
+                            { name }
+                            { topicElement }
+                        </div>
+                        <div className="tc_RoomHeader_advancedInfos">
+                            { roomType }
+                            <span className="tc_RoomHeader_middot">&middot;</span>
+                            { memberCount }
+                        </div>
+                    </div>
                     { cancelButton }
-                    { roomAccessibility }
                     { rightRow }
                     <RoomHeaderButtons />
                 </div>

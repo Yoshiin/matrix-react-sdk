@@ -2333,5 +2333,9 @@
     "The field note is required.": "The field note is required.",
     "Your password must include a lower-case letter, an upper-case letter, a number and a symbol and be at a minimum 8 characters in length.": "Your password must include a lower-case letter, an upper-case letter, a number and a symbol and be at a minimum 8 characters in length.",
     "This password is too weak. It must include a lower-case letter, an upper-case letter, a number and a symbol and be at a minimum 8 characters in length.": "This password is too weak. It must include a lower-case letter, an upper-case letter, a number and a symbol and be at a minimum 8 characters in length.",
-    "Password too weak !": "Password too weak !"
+    "Password too weak !": "Password too weak !",
+    "Public": "Public",
+    "Private": "Private",
+    "External": "External",
+    "Direct": "Direct"
 }

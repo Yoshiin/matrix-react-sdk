@@ -296,7 +296,6 @@
 .mx_RoomTile_name {
     color: #dddddd;
     padding-left: 10px;
-    //font-weight: bold;
     font-size: medium;
 }
 
@@ -348,4 +347,54 @@
 // Room Header
 .mx_RoomHeader_wrapper {
     height: 72px;
+}
+
+.tc_RoomHeader_encryptionInfos {
+    left: -20px;
+    position: relative;
+    bottom: -13px;
+}
+
+.mx_RoomHeader_name:hover div:not(.mx_RoomHeader_editable)/*:not(.mx_RoomHeader_topic)*/ {
+    cursor: initial;
+    color: #45474a;
+}
+
+.tc_RoomHeader_infos {
+    width: 100%;
+    .tc_RoomHeader_classicInfos {
+        display: flex;
+        .mx_RoomHeader_topic {
+            max-height: 16px;
+            margin-top: 6px;
+        }
+        .mx_RoomHeader_name {
+            font-size: 19px;
+        }
+    }
+    .tc_RoomHeader_advancedInfos {
+        display: flex;
+    }
+    .tc_RoomHeader_memberCount {
+        font-size: 11px;
+        margin-left: 10px;
+        margin-top: 3px;
+    }
+    .tc_RoomHeader_roomType {
+        margin-right: 10px;
+        font-size: 14px;
+        margin-left: 8px;
+    }
+    .tc_RoomHeader_roomType_direct {
+        color: #9e9e9e;
+    }
+    .tc_RoomHeader_roomType_restricted {
+        color: #eb5757;
+    }
+    .tc_RoomHeader_roomType_unrestricted {
+        color: #f2994a;
+    }
+    .tc_RoomHeader_roomType_public {
+        color: #6fcf97;
+    }
 }

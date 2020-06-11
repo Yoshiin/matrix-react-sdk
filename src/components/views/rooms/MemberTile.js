@@ -257,11 +257,6 @@ export default createReactClass({
             e2eStatus = this.state.e2eStatus;
         }
 
-        console.error("this.getPowerLabel()")
-        console.error(this.getPowerLabel())
-        console.error("name")
-        console.error(name)
-
         return (
             <EntityTile
                 {...this.props}
