@@ -169,18 +169,18 @@ export default createReactClass({
         let classes = "tc_RoomHeader_roomType";
         let translation = "";
         if (dmUserId) {
-            classes += " tc_RoomHeader_roomType_direct";
+            classes += " tc_Room_roomType_direct";
             translation = _t("Direct");
         } else if (this._getJoinRules(this.props.room) === "public") {
-            classes += " tc_RoomHeader_roomType_public";
+            classes += " tc_Room_roomType_public";
             translation = _t("Public");
         } else if (this._getJoinRules(this.props.room) === "invite" &&
             Tchap.getAccessRules(this.props.room.roomId) === "restricted") {
-            classes += " tc_RoomHeader_roomType_restricted";
+            classes += " tc_Room_roomType_restricted";
             translation = _t("Private");
         } else if (this._getJoinRules(this.props.room) === "invite" &&
             Tchap.getAccessRules(this.props.room.roomId) === "unrestricted") {
-            classes += " tc_RoomHeader_roomType_unrestricted";
+            classes += " tc_Room_roomType_unrestricted";
             translation = _t("External");
         }
 

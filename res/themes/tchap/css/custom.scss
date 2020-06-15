@@ -401,16 +401,17 @@
         font-size: 14px;
         margin-left: 8px;
     }
-    .tc_RoomHeader_roomType_direct {
-        color: #9e9e9e;
-    }
-    .tc_RoomHeader_roomType_restricted {
-        color: #eb5757;
-    }
-    .tc_RoomHeader_roomType_unrestricted {
-        color: #f2994a;
-    }
-    .tc_RoomHeader_roomType_public {
-        color: #6fcf97;
-    }
+}
+
+.tc_Room_roomType_direct {
+    color: #9e9e9e;
+}
+.tc_Room_roomType_restricted {
+    color: #eb5757;
+}
+.tc_Room_roomType_unrestricted {
+    color: #f2994a;
+}
+.tc_Room_roomType_public {
+    color: #6fcf97;
 }
