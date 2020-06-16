@@ -33,11 +33,9 @@ import RoomViewStore from '../../../stores/RoomViewStore';
 import SettingsStore from "../../../settings/SettingsStore";
 import {_t} from "../../../languageHandler";
 import {RovingTabIndexWrapper} from "../../../accessibility/RovingTabIndex";
-import E2EIcon from './E2EIcon';
-import InviteOnlyIcon from './InviteOnlyIcon';
 // eslint-disable-next-line camelcase
 import rate_limited_func from '../../../ratelimitedfunc';
-import { shieldStatusForRoom } from '../../../utils/ShieldUtils';
+import {shieldStatusForRoom} from '../../../utils/ShieldUtils';
 import Tchap from "../../../tchap/Tchap";
 
 export default createReactClass({
@@ -366,6 +364,31 @@ export default createReactClass({
         this.setState(state);
     },
 
+    renderRoomTypeElement: function() {
+        const dmUserId = DMRoomMap.shared().getUserIdForRoomId(this.props.room.roomId);
+        let classes = "tc_RoomTile_roomType";
+        let translation = "";
+        if (dmUserId) {
+            classes += " tc_Room_roomType_direct";
+            translation = _t("Direct");
+        } else if (Tchap.getJoinRules(this.props.room.roomId) === "public") {
+            classes += " tc_Room_roomType_public";
+            translation = _t("Public");
+        } else if (Tchap.getJoinRules(this.props.room.roomId) === "invite" &&
+            Tchap.getAccessRules(this.props.room.roomId) === "restricted") {
+            classes += " tc_Room_roomType_restricted";
+            translation = _t("Private");
+        } else if (Tchap.getJoinRules(this.props.room.roomId) === "invite" &&
+            Tchap.getAccessRules(this.props.room.roomId) === "unrestricted") {
+            classes += " tc_Room_roomType_unrestricted";
+            translation = _t("External");
+        } else {
+            translation = '\u00A0';
+        }
+
+        return (<div className={classes}>{translation}</div>);
+    },
+
     onContextMenuButtonClick: function(e) {
         // Prevent the RoomTile onClick event firing as well
         e.stopPropagation();
@@ -450,6 +473,9 @@ export default createReactClass({
             badge = <div className={badgeClasses}>{ badgeContent }</div>;
         }
 
+        let roomType;
+        roomType = this.renderRoomTypeElement();
+
         let label;
         let subtextLabel;
         let tooltip;
@@ -462,7 +488,13 @@ export default createReactClass({
 
             subtextLabel = subtext ? <span className="mx_RoomTile_subtext">{ subtext }</span> : null;
             // XXX: this is a workaround for Firefox giving this div a tabstop :( [tabIndex]
-            label = <div title={name} className={nameClasses} tabIndex={-1} dir="auto">{ name }{ badge }</div>;
+
+            label = (
+                <div className="tc_RoomTile_firstLine">
+                    <div title={name} className={nameClasses} tabIndex={-1} dir="auto">{badge}{name}</div>
+                    {roomType}
+                </div>);
+
         } else if (this.state.hover) {
             const Tooltip = sdk.getComponent("elements.Tooltip");
             tooltip = <Tooltip className="mx_RoomTile_tooltip" label={this.props.room.name} dir="auto" />;
@@ -544,7 +576,8 @@ export default createReactClass({
             mainAvatarClasses += " mx_RoomTile_avatar_room";
         }
 
-        mainAvatarClasses += ` mx_RoomTile_avatar_${Tchap.getAccessRules(this.props.room.roomId)}`;
+        // Disable SCSS AccessRules class for the moment
+        //mainAvatarClasses += ` mx_RoomTile_avatar_${Tchap.getAccessRules(this.props.room.roomId)}`;
 
         return <React.Fragment>
             <RovingTabIndexWrapper inputRef={this._roomTile}>

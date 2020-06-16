@@ -61,7 +61,7 @@ export default class RoomProfileSettings extends React.Component {
             canSetTopic: room.currentState.maySendStateEvent('m.room.topic', client.getUserId()),
             canSetAvatar: room.currentState.maySendStateEvent('m.room.avatar', client.getUserId()),
             access_rules: Tchap.getAccessRules(props.roomId),
-            join_rules: this._getJoinRules(room),
+            join_rules: Tchap.getJoinRules(props.roomId),
         };
 
         this._avatarUpload = createRef();
@@ -177,18 +177,6 @@ export default class RoomProfileSettings extends React.Component {
                 }
             },
         });
-    };
-
-    _getJoinRules = (room) => {
-        const stateEventType = "m.room.join_rules";
-        const keyName = "join_rule";
-        const defaultValue = "public";
-        const event = room.currentState.getStateEvents(stateEventType, '');
-        if (!event) {
-            return defaultValue;
-        }
-        const content = event.getContent();
-        return keyName in content ? content[keyName] : defaultValue;
     };
 
     render() {

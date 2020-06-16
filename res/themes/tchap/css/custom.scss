@@ -280,7 +280,7 @@
     min-height: 60px;
     margin-top: -1px;
     &:focus {
-        background-color: #35496e;
+        background-color: #162d58;
     }
     &::after {
         content: "";
@@ -291,18 +291,59 @@
         width: 80%;
         border-bottom: 1px solid #35496e;
     }
+    &:hover {
+        .mx_RoomTile_subtext {
+            margin-right: 1px;
+        }
+    }
+}
+
+// FIXME : Define the avatar size for invited room list (RoomTile)
+/*.mx_RoomTile {
+    &:not(.mx_RoomTile_invited) {
+        min-height: 60px;
+        margin-top: -1px;
+    }
+}
+.mx_RoomTile_invited .mx_BaseAvatar_image {
+    width: 10px !important;
+    height: 10px !important;
+}
+*/
+
+.tc_RoomTile_firstLine {
+    color: #dddddd;
+    padding-left: 10px;
 }
 
 .mx_RoomTile_name {
-    color: #dddddd;
-    padding-left: 10px;
     font-size: medium;
+    color: inherit;
+    display: inline-flex;
+}
+
+.tc_RoomTile_roomType {
+    display: inline-flex;
+    position: absolute;
+    right: 0;
+    background-color: #162d58;
+    padding: 4px 24px 0 8px;
+    font-size: 12px;
+}
+
+.mx_RoomTile_selected .tc_RoomTile_roomType {
+    background-color: #35496e;
+}
+
+.mx_RoomTile_menuButton {
+    z-index: 1;
 }
 
 .mx_RoomTile_subtext {
     color: #dddddd;
-    padding: 0 0 0 11px;
+    padding: 0 0 0 14px;
     margin-top: 6px;
+    margin-right: 17px;
 }
 
 .mx_RoomTile_selected {
@@ -316,12 +357,12 @@
 }
 
 .tc_RoomTile_badge {
-    display: inline;
-    margin-left: 10px;
+    display: inline-flex;
     padding: 0 8px 0 8px;
     background-color: #dddddd !important;
     color: #162d58 !important;
     font-weight: bold;
+    margin: 3px 6px 3px 0;
 }
 
 .tc_RoomSubList_badge > div {

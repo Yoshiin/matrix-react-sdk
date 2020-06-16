@@ -152,18 +152,6 @@ export default createReactClass({
         return !(currentPinEvent.getContent().pinned && currentPinEvent.getContent().pinned.length <= 0);
     },
 
-    _getJoinRules: function(room) {
-        const stateEventType = "m.room.join_rules";
-        const keyName = "join_rule";
-        const defaultValue = "public";
-        const event = room.currentState.getStateEvents(stateEventType, '');
-        if (!event) {
-            return defaultValue;
-        }
-        const content = event.getContent();
-        return keyName in content ? content[keyName] : defaultValue;
-    },
-
     renderRoomTypeElement: function() {
         const dmUserId = DMRoomMap.shared().getUserIdForRoomId(this.props.room.roomId);
         let classes = "tc_RoomHeader_roomType";
@@ -171,14 +159,14 @@ export default createReactClass({
         if (dmUserId) {
             classes += " tc_Room_roomType_direct";
             translation = _t("Direct");
-        } else if (this._getJoinRules(this.props.room) === "public") {
+        } else if (Tchap.getJoinRules(this.props.room.roomId) === "public") {
             classes += " tc_Room_roomType_public";
             translation = _t("Public");
-        } else if (this._getJoinRules(this.props.room) === "invite" &&
+        } else if (Tchap.getJoinRules(this.props.room.roomId) === "invite" &&
             Tchap.getAccessRules(this.props.room.roomId) === "restricted") {
             classes += " tc_Room_roomType_restricted";
             translation = _t("Private");
-        } else if (this._getJoinRules(this.props.room) === "invite" &&
+        } else if (Tchap.getJoinRules(this.props.room.roomId) === "invite" &&
             Tchap.getAccessRules(this.props.room.roomId) === "unrestricted") {
             classes += " tc_Room_roomType_unrestricted";
             translation = _t("External");

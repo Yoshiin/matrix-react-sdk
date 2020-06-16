@@ -233,6 +233,24 @@ export default class Tchap {
     }
 
     /**
+     * Given a roomId, return the join_rules of the room.
+     * @param {string} roomId The room ID to test for.
+     * @returns {string} The join_rules of the room.
+     */
+    static getJoinRules(roomId) {
+        const stateEventType = "m.room.join_rules";
+        const keyName = "join_rule";
+        const defaultValue = "public";
+        const room = MatrixClientPeg.get().getRoom(roomId);
+        const event = room.currentState.getStateEvents(stateEventType, '');
+        if (!event) {
+            return defaultValue;
+        }
+        const content = event.getContent();
+        return keyName in content ? content[keyName] : defaultValue;
+    }
+
+    /**
      *
      * @param myUserId
      * @param userId
