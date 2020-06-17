@@ -25,6 +25,7 @@ import dis from '../../../dispatcher';
 import classNames from 'classnames';
 import { _t } from '../../../languageHandler';
 import IdentityAuthClient from '../../../IdentityAuthClient';
+import Tchap from "../../../tchap/Tchap";
 
 const MessageCase = Object.freeze({
     NotLoggedIn: "NotLoggedIn",
@@ -128,11 +129,9 @@ export default createReactClass({
                 }
                 const authClient = new IdentityAuthClient();
                 const identityAccessToken = await authClient.getAccessToken();
-                const result = await MatrixClientPeg.get().lookupThreePid(
+                const result = await Tchap.lookupThreePid(
                     'email',
-                    this.props.invitedEmail,
-                    undefined /* callback */,
-                    identityAccessToken,
+                    this.props.invitedEmail
                 );
                 this.setState({invitedEmailMxid: result.mxid});
             } catch (err) {

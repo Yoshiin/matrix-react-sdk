@@ -42,7 +42,7 @@ export default createReactClass({
             topic: "",
             alias: "",
             detailsOpen: false,
-            noFederate: config.default_federate === false,
+            noFederate: true,
             nameIsValid: false,
             externAllowed: false,
             externAllowedSwitchDisabled: this.props.defaultPublic || false,
@@ -142,7 +142,7 @@ export default createReactClass({
             isPublic,
             externAllowedSwitchDisabled: isPublic,
             externAllowed: false,
-            noFederate: false
+            noFederate: isPublic
         });
     },
 
@@ -155,8 +155,6 @@ export default createReactClass({
     },
 
     onExternAllowedSwitchChange(ev) {
-        console.error("ev")
-        console.error(ev)
         this.setState({
             externAllowed: ev
         });

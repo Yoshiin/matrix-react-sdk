@@ -142,7 +142,9 @@ export default class IdentityAuthClient {
             !doesAccountDataHaveIdentityServer() &&
             !await doesIdentityServerHaveTerms(identityServerUrl)
         ) {
-            const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
+            // We don't use IdentityClient with dynamic TOS for the moment.
+            useDefaultIdentityServer();
+/*            const QuestionDialog = sdk.getComponent("dialogs.QuestionDialog");
             const { finished } = Modal.createTrackedDialog('Default identity server terms warning', '',
                 QuestionDialog, {
                 title: _t("Identity server has no terms of service"),
@@ -170,7 +172,7 @@ export default class IdentityAuthClient {
                 throw new AbortedIdentityActionError(
                     "User aborted identity server action without terms",
                 );
-            }
+            }*/
         }
 
         // We should ensure the token in `localStorage` is cleared

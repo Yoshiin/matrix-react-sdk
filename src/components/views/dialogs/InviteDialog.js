@@ -796,11 +796,9 @@ export default class InviteDialog extends React.PureComponent {
                     const token = await authClient.getAccessToken();
                     if (term !== this.state.filterText) return; // abandon hope
 
-                    const lookup = await MatrixClientPeg.get().lookupThreePid(
+                    const lookup = await Tchap.lookupThreePid(
                         'email',
-                        term,
-                        undefined, // callback
-                        token,
+                        term
                     );
                     if (term !== this.state.filterText) return; // abandon hope
 

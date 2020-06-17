@@ -23,10 +23,10 @@ export function getDefaultIdentityServerUrl() {
 }
 
 export function useDefaultIdentityServer() {
-    const url = getDefaultIdentityServerUrl();
+    //const url = getDefaultIdentityServerUrl();
     // Account data change will update localstorage, client, etc through dispatcher
     MatrixClientPeg.get().setAccountData("m.identity_server", {
-        base_url: url,
+        base_url: MatrixClientPeg.get().getIdentityServerUrl(),
     });
 }
 
