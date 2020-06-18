@@ -783,6 +783,8 @@
     "Clear cache and reload": "Clear cache and reload",
     "To report a Matrix-related security issue, please read the Matrix.org <a>Security Disclosure Policy</a>.": "To report a Matrix-related security issue, please read the Matrix.org <a>Security Disclosure Policy</a>.",
     "FAQ": "FAQ",
+    "TAC": "TAC",
+    "User Guide": "User Guide",
     "Keyboard Shortcuts": "Keyboard Shortcuts",
     "Versions": "Versions",
     "riot-web version:": "riot-web version:",

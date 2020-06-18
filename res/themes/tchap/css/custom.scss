@@ -175,6 +175,44 @@
     border-bottom: 1px solid #35496e;
 }
 
+.tc_LeftPanel_Bottom {
+    display: flex;
+    height: 80px;
+    border-top: 1px solid #35496e;
+}
+
+.tc_LeftPanel_Bottom_links {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    margin: 30px -50px 0 20px;
+    overflow: hidden;
+    text-align: right;
+    color: #dddddd;
+    & a {
+        color: #dddddd;
+        text-decoration: none;
+    }
+}
+
+.tc_LeftPanel_Bottom_logo {
+    position: relative;
+    margin: 21px 10px 0 20px;
+    & img {
+        height: 40px;
+    }
+}
+
+.tc_LeftPanel_Button_cross {
+    margin-right: 19px;
+    margin-top: -76px;
+    z-index: 1;
+}
+
+.mx_RoomList > .mx_RoomSubList:last-child {
+    margin-bottom: 90px;
+}
+
 // Top Bar
 .mx_TopLeftMenuButton {
     background-color: #162d58;
@@ -212,7 +250,6 @@
 .mx_SearchBox {
     flex: 1 1 0;
     min-width: 0;
-
     &.mx_SearchBox_blurred:hover {
         background-color: #273d64;
     }
@@ -350,7 +387,6 @@
     box-shadow: 4px 4px 4px 0 #273d64;
 }
 
-
 .mx_ContextualMenu.mx_ContextualMenu_withChevron_left {
     background-color: #273d64;
     color: #dddddd;
@@ -363,6 +399,7 @@
         background-color: #35496e;
     }
 }
+
 .mx_ContextualMenu_chevron_left {
     border-right: 8px solid #273d64;
 }
@@ -436,17 +473,9 @@
     line-height: 20px;
     opacity: 0.8;
 }
+
 .tc_RoomStatusBar_reinvite {
     font-size: inherit;
     padding: 0 15px;
     margin-top: 13px;
-/*    cursor: pointer;
-    color: #162d58;
-    opacity: 1;
-    &:visited,
-    &:hover,
-    &:active {
-        color: #162d58;
-        opacity: 1;
-    }*/
 }
