@@ -2337,5 +2337,6 @@
     "Public": "Public",
     "Private": "Private",
     "External": "External",
-    "Direct": "Direct"
+    "Direct": "Direct",
+    "%(user)s seems to have left the conversation. Do you want to <btn>invite</btn> him back?": "%(user)s seems to have left the conversation. Do you want to <btn>invite</btn> him back?"
 }

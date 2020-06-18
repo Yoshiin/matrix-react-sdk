@@ -27,6 +27,10 @@ import Resend from '../../Resend';
 import * as cryptodevices from '../../cryptodevices';
 import dis from '../../dispatcher';
 import {messageForResourceLimitError, messageForSendError} from '../../utils/ErrorUtils';
+import {inviteMultipleToRoom} from "../../RoomInvite";
+import DMRoomMap from "../../utils/DMRoomMap";
+import Tchap from "../../tchap/Tchap";
+import AccessibleButton from "../views/elements/AccessibleButton";
 
 const STATUS_BAR_HIDDEN = 0;
 const STATUS_BAR_EXPANDED = 1;
@@ -152,6 +156,14 @@ export default createReactClass({
 
         this.setState({
             unsentMessages: getUnsentMessages(this.props.room),
+        });
+    },
+
+    _onReinviteClick: function() {
+        const dmUserId = DMRoomMap.shared().getUserIdForRoomId(this.props.room.roomId);
+        inviteMultipleToRoom(this.props.room.roomId, [dmUserId]).then().catch(err => {
+            console.error("Failed to invite user to the room")
+            console.error(err)
         });
     },
 
@@ -328,9 +340,28 @@ export default createReactClass({
 
         // If you're alone in the room, and have sent a message, suggest to invite someone
         if (this.props.sentMessageAndIsAlone && !this.props.isPeeking) {
+            //this.props.room
+            //{ _t("There's no one else here!") }
+
+            let warningText = _t("There's no one else here!");
+            const dmUserId = DMRoomMap.shared().getUserIdForRoomId(this.props.room.roomId);
+            const accessRule = Tchap.getAccessRules(this.props.room.roomId)
+            if (accessRule === "direct" && dmUserId) {
+                const partner = MatrixClientPeg.get().getUser(dmUserId);
+                warningText = _t("%(user)s seems to have left the conversation. Do you want to <btn>invite</btn> him back?", {
+                    user: partner.rawDisplayName
+                }, {
+                    'btn': (sub)=><AccessibleButton
+                        onClick={this._onReinviteClick}
+                        kind={'primary_outline'}
+                        className="tc_RoomStatusBar_reinvite"
+                    >{ sub }</AccessibleButton>,
+                })
+            }
+
             return (
                 <div className="mx_RoomStatusBar_isAlone">
-                    { _t("There's no one else here!") }
+                    { warningText }
                 </div>
             );
         }

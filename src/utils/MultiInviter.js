@@ -100,15 +100,14 @@ export default class MultiInviter {
         const accessRule = Tchap.getAccessRules(roomId);
 
         if (addrType === 'email') {
-            if (accessRule === 'restricted') {
-                return Tchap.getHSInfoFromEmail(addr).then((d) => {
-                    if (Tchap.isUserExternFromServerHostname(d.hs) === true) {
-                        throw {errcode: "TCHAP.EXTERN_NOT_ALLOWED", error: "Externals are allowed to join this room"};
-                    } else {
-                        return MatrixClientPeg.get().inviteByEmail(roomId, addr);
-                    }
-                })
-            }
+            return Tchap.getHSInfoFromEmail(addr).then((d) => {
+                const isUserExtern = Tchap.isUserExternFromServerHostname(d.hs);
+                if (accessRule === 'restricted' && isUserExtern) {
+                    throw {errcode: "TCHAP.EXTERN_NOT_ALLOWED", error: "Externals are allowed to join this room"};
+                } else {
+                    return MatrixClientPeg.get().inviteByEmail(roomId, addr);
+                }
+            })
         } else if (addrType === 'mx-user-id') {
             const room = MatrixClientPeg.get().getRoom(roomId);
             if (!room) throw new Error("Room not found");

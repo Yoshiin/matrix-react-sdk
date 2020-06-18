@@ -139,10 +139,16 @@ export default class Tchap {
      * @returns {boolean}
      */
     static isUserExtern(userId) {
-        return userId ? (
-            userId.split(':')[1].startsWith('e.') ||
-            userId.split(':')[1].startsWith('agent.externe.')
-        ) : false;
+        if (userId) {
+            const s = userId.split(':');
+            if (s && s[1]) {
+                return (
+                    s[1].startsWith('e.') ||
+                    s[1].startsWith('agent.externe.')
+                );
+            }
+        }
+        return false;
     }
 
     /**

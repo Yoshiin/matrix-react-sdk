@@ -247,7 +247,7 @@ export default createReactClass({
         }
         const topicElement =
             <div className="mx_RoomHeader_topic" ref={this._topic} title={topic} dir="auto">{ topic }</div>;
-        const avatarSize = 34;
+        const avatarSize = 44;
         let roomAvatar;
         if (this.props.room) {
             roomAvatar = (<RoomAvatar
@@ -324,16 +324,17 @@ export default createReactClass({
 
         let encryptedIndicator = null;
         if (MatrixClientPeg.get().isRoomEncrypted(this.props.room.roomId)) {
-            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_room.svg")} width="10" height="12" alt="encrypted" className="tc_RoomHeader_encryptionInfos" />;
+            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_bordered-white.svg")} width="15" height="19" alt="encrypted" className="tc_RoomHeader_encryptionInfos" />;
         }
 
-        let roomAccessibility;
+        let memberCount = null;
         let mainAvatarClasses = "mx_RoomHeader_avatar";
         if (!dmUserId) {
-            mainAvatarClasses += ` mx_RoomHeader_avatar_room mx_RoomHeader_avatar_${Tchap.getAccessRules(this.props.room.roomId)}`;
-            if (Tchap.getAccessRules(this.props.room.roomId) !== "restricted") {
-                roomAccessibility = (<div className="mx_RoomHeader_accessibility" ref="accessibility" title={ _t("Room open to external users") } dir="auto">{ _t("Room open to external users") }</div>);
+            mainAvatarClasses += " mx_RoomHeader_avatar_room";
+            if (Tchap.getAccessRules(this.props.room.roomId) === "unrestricted") {
+                mainAvatarClasses += " mx_RoomHeader_avatar_unrestricted"
             }
+            memberCount = (<div className="tc_RoomHeader_memberCount">{ `${this.props.room.getJoinedMemberCount()} ${_t("Members")}` }</div>);
         }
 
         const rightRow =
@@ -345,7 +346,6 @@ export default createReactClass({
                 { searchButton }
             </div>;
 
-        const memberCount = (<div className="tc_RoomHeader_memberCount">{ `${this.props.room.getJoinedMemberCount()} ${_t("Members")}` }</div>);
         const roomType = this.renderRoomTypeElement();
 
         //{ roomAccessibility }
@@ -362,7 +362,7 @@ export default createReactClass({
                         </div>
                         <div className="tc_RoomHeader_advancedInfos">
                             { roomType }
-                            <span className="tc_RoomHeader_middot">&middot;</span>
+                            { memberCount ? <span className="tc_RoomHeader_middot">&middot;</span> : null }
                             { memberCount }
                         </div>
                     </div>

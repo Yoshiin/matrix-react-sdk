@@ -18,16 +18,6 @@
     border-radius: 0;
 }
 
-.mx_RoomHeader_avatar_restricted {
-    background-image: url('$(res)/img/162d58.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    flex: unset;
-    padding: 4px 4px 4px 4px;
-}
-
 .mx_RoomHeader_avatar_unrestricted {
     background-image: url('$(res)/img/cccccc.png');
     background-repeat: no-repeat;
@@ -52,25 +42,27 @@
     font-style: italic;
 }
 
-.mx_RoomTile_avatar_restricted {
-    background-image: url('$(res)/img/162d58.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-}
-
 .mx_RoomTile_avatar_unrestricted {
     background-image: url('$(res)/img/cccccc.png');
     background-repeat: no-repeat;
     background-position: center;
     -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    padding: 2px;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+.mx_RoomTile_avatar {
+    flex: 0;
+    vertical-align: middle;
 }
 
 .mx_RoomTile_dm {
     left: 40px;
-    bottom: 10px;
+    top: 12px;
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
 }
 
 .tc_RoomDirectory_roomPreview {
@@ -122,10 +114,8 @@
 }
 
 .mx_accessRulesEvent {
-
     display: grid;
     grid-template-columns: 24px minmax(0, 1fr) min-content;
-
     &.mx_accessRulesEvent_icon::after {
         grid-column: 1;
         grid-row: 1 / 3;
@@ -137,18 +127,15 @@
         background-size: 100%;
         margin-top: 4px;
     }
-
     .mx_accessRulesEvent_title, .mx_accessRulesEvent_subtitle {
         overflow-wrap: break-word;
     }
-
     .mx_accessRulesEvent_title {
         font-weight: 600;
         font-size: $font-15px;
         grid-column: 2;
         grid-row: 1;
     }
-
     .mx_accessRulesEvent_subtitle {
         grid-column: 2;
         grid-row: 2;
@@ -291,25 +278,7 @@
         width: 80%;
         border-bottom: 1px solid #35496e;
     }
-    &:hover {
-        .mx_RoomTile_subtext {
-            margin-right: 1px;
-        }
-    }
 }
-
-// FIXME : Define the avatar size for invited room list (RoomTile)
-/*.mx_RoomTile {
-    &:not(.mx_RoomTile_invited) {
-        min-height: 60px;
-        margin-top: -1px;
-    }
-}
-.mx_RoomTile_invited .mx_BaseAvatar_image {
-    width: 10px !important;
-    height: 10px !important;
-}
-*/
 
 .tc_RoomTile_firstLine {
     color: #dddddd;
@@ -339,16 +308,12 @@
     z-index: 1;
 }
 
-.mx_RoomTile_subtext {
-    color: #dddddd;
-    padding: 0 0 0 14px;
-    margin-top: 6px;
-    margin-right: 17px;
-}
-
 .mx_RoomTile_selected {
     border-radius: 0;
     background-color: #35496e;
+    &:focus {
+        background-color: #35496e;
+    }
 }
 
 .mx_RoomTile_unread .mx_RoomTile_name, .mx_RoomTile_highlight .mx_RoomTile_name {
@@ -358,7 +323,7 @@
 
 .tc_RoomTile_badge {
     display: inline-flex;
-    padding: 0 8px 0 8px;
+    padding: 0 7px 0 8px;
     background-color: #dddddd !important;
     color: #162d58 !important;
     font-weight: bold;
@@ -366,10 +331,15 @@
 }
 
 .tc_RoomSubList_badge > div {
-    padding: 0 8px 0 8px;
+    padding: 0 7px 0 8px;
     background-color: #dddddd !important;
     color: #162d58 !important;
     font-weight: bold;
+    font-size: 12px;
+}
+
+.mx_RoomTile_invite .tc_RoomTile_badge {
+    padding: 0 9px 0 9px;
 }
 
 // Context Menus
@@ -407,9 +377,11 @@
 }
 
 .tc_RoomHeader_encryptionInfos {
-    left: -20px;
     position: relative;
-    bottom: -13px;
+    right: 16px;
+    bottom: 14px;
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
 }
 
 .mx_RoomHeader_name:hover div:not(.mx_RoomHeader_editable)/*:not(.mx_RoomHeader_topic)*/ {
@@ -427,6 +399,7 @@
         }
         .mx_RoomHeader_name {
             font-size: 19px;
+            margin: -3px 7px;
         }
     }
     .tc_RoomHeader_advancedInfos {
@@ -455,4 +428,25 @@
 }
 .tc_Room_roomType_public {
     color: #6fcf97;
+}
+
+// Message Composer
+.mx_RoomStatusBar_isAlone {
+    height: 50px;
+    line-height: 20px;
+    opacity: 0.8;
+}
+.tc_RoomStatusBar_reinvite {
+    font-size: inherit;
+    padding: 0 15px;
+    margin-top: 13px;
+/*    cursor: pointer;
+    color: #162d58;
+    opacity: 1;
+    &:visited,
+    &:hover,
+    &:active {
+        color: #162d58;
+        opacity: 1;
+    }*/
 }

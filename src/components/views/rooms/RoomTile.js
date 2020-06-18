@@ -448,7 +448,7 @@ export default createReactClass({
             'mx_RoomTile_menuDisplayed': isMenuDisplayed,
             'mx_RoomTile_noBadges': !badges,
             'mx_RoomTile_transparent': this.props.transparent,
-            'mx_RoomTile_hasSubtext': subtext && !this.props.collapsed,
+            'mx_RoomTile_hasSubtext': false,
             'tc_RoomTile_direct': Boolean(dmUserId)
         });
 
@@ -465,6 +465,13 @@ export default createReactClass({
         let name = this.state.roomName;
         if (typeof name !== 'string') name = '';
         name = name.replace(":", ":\u200b"); // add a zero-width space to allow linewrapping after the colon
+        if (dmUserId) {
+            const room = this.props.room;
+            let memberLeave = room.getMembersWithMembership("leave");
+            if (memberLeave.length > 0) {
+                name = memberLeave[0].rawDisplayName;
+            }
+        }
 
         let badge;
         if (badges) {
@@ -488,7 +495,6 @@ export default createReactClass({
 
             subtextLabel = subtext ? <span className="mx_RoomTile_subtext">{ subtext }</span> : null;
             // XXX: this is a workaround for Firefox giving this div a tabstop :( [tabIndex]
-
             label = (
                 <div className="tc_RoomTile_firstLine">
                     <div title={name} className={nameClasses} tabIndex={-1} dir="auto">{badge}{name}</div>
@@ -568,16 +574,18 @@ export default createReactClass({
 
         let encryptedIndicator = null;
         if (MatrixClientPeg.get().isRoomEncrypted(this.props.room.roomId)) {
-            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_room_white.svg")} className="mx_RoomTile_dm" width="10" height="12" alt="encrypted" />;
+            encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_bordered-blue.svg")} className="mx_RoomTile_dm" width="12" height="15" alt="encrypted" />;
         }
 
         let mainAvatarClasses = avatarClasses;
+        let avatarSize = 34;
         if (!dmUserId) {
             mainAvatarClasses += " mx_RoomTile_avatar_room";
+            if (Tchap.getAccessRules(this.props.room.roomId) === "unrestricted") {
+                avatarSize = 30;
+                mainAvatarClasses += " mx_RoomTile_avatar_unrestricted";
+            }
         }
-
-        // Disable SCSS AccessRules class for the moment
-        //mainAvatarClasses += ` mx_RoomTile_avatar_${Tchap.getAccessRules(this.props.room.roomId)}`;
 
         return <React.Fragment>
             <RovingTabIndexWrapper inputRef={this._roomTile}>
@@ -597,14 +605,13 @@ export default createReactClass({
                     >
                         <div className={mainAvatarClasses}>
                             <div className="mx_RoomTile_avatar_container">
-                                <RoomAvatar room={this.props.room} width={34} height={34} />
+                                <RoomAvatar room={this.props.room} width={avatarSize} height={avatarSize} />
                             </div>
                         </div>
                         { encryptedIndicator }
                         <div className="mx_RoomTile_nameContainer">
                             <div className="mx_RoomTile_labelContainer">
                                 { label }
-                                { subtextLabel }
                             </div>
                             { dmOnline }
                             { contextMenuButton }
