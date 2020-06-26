@@ -34,14 +34,14 @@ import ContentMessages from '../../ContentMessages';
 import Modal from '../../Modal';
 import * as sdk from '../../index';
 import CallHandler from '../../CallHandler';
-import dis from '../../dispatcher';
+import dis from '../../dispatcher/dispatcher';
 import Tinter from '../../Tinter';
 import rate_limited_func from '../../ratelimitedfunc';
 import * as ObjectUtils from '../../ObjectUtils';
 import * as Rooms from '../../Rooms';
 import eventSearch from '../../Searching';
 
-import {isOnlyCtrlOrCmdKeyEvent, Key} from '../../Keyboard';
+import {isOnlyCtrlOrCmdIgnoreShiftKeyEvent, isOnlyCtrlOrCmdKeyEvent, Key} from '../../Keyboard';
 
 import MainSplit from './MainSplit';
 import RightPanel from './RightPanel';
@@ -55,6 +55,7 @@ import {haveTileForEvent} from "../views/rooms/EventTile";
 import RoomContext from "../../contexts/RoomContext";
 import MatrixClientContext from "../../contexts/MatrixClientContext";
 import { shieldStatusForRoom } from '../../utils/ShieldUtils';
+import {Action} from "../../dispatcher/actions";
 
 const DEBUG = false;
 let debuglog = function() {};
@@ -164,6 +165,10 @@ export default createReactClass({
 
             canReact: false,
             canReply: false,
+
+            useIRCLayout: SettingsStore.getValue("feature_irc_ui"),
+
+            matrixClientIsReady: this.context && this.context.isInitialSyncComplete(),
         };
     },
 
@@ -193,6 +198,8 @@ export default createReactClass({
 
         this._roomView = createRef();
         this._searchResultsPanel = createRef();
+
+        this._layoutWatcherRef = SettingsStore.watchSetting("feature_irc_ui", null, this.onLayoutChange);
     },
 
     _onReadReceiptsChange: function() {
@@ -232,7 +239,8 @@ export default createReactClass({
             initialEventId: RoomViewStore.getInitialEventId(),
             isInitialEventHighlighted: RoomViewStore.isInitialEventHighlighted(),
             forwardingEvent: RoomViewStore.getForwardingEvent(),
-            shouldPeek: RoomViewStore.shouldPeek(),
+            // we should only peek once we have a ready client
+            shouldPeek: this.state.matrixClientIsReady && RoomViewStore.shouldPeek(),
             showingPinned: SettingsStore.getValue("PinnedEvents.isOpen", roomId),
             showReadReceipts: SettingsStore.getValue("showReadReceipts", roomId),
         };
@@ -532,6 +540,14 @@ export default createReactClass({
         // no need to do this as Dir & Settings are now overlays. It just burnt CPU.
         // console.log("Tinter.tint from RoomView.unmount");
         // Tinter.tint(); // reset colourscheme
+
+        SettingsStore.unwatchSetting(this._layoutWatcherRef);
+    },
+
+    onLayoutChange: function() {
+        this.setState({
+            useIRCLayout: SettingsStore.getValue("feature_irc_ui"),
+        });
     },
 
     _onRightPanelStoreUpdate: function() {
@@ -585,6 +601,18 @@ export default createReactClass({
                 if (!ev.altKey && !ev.ctrlKey && !ev.shiftKey && !ev.metaKey) {
                     this._messagePanel.forgetReadMarker();
                     this.jumpToLiveTimeline();
+                    handled = true;
+                }
+                break;
+            case Key.PAGE_UP:
+                if (!ev.altKey && !ev.ctrlKey && ev.shiftKey && !ev.metaKey) {
+                    this.jumpToReadMarker();
+                    handled = true;
+                }
+                break;
+            case Key.U.toUpperCase():
+                if (isOnlyCtrlOrCmdIgnoreShiftKeyEvent(ev) && ev.shiftKey) {
+                    dis.dispatch({ action: "upload_file" })
                     handled = true;
                 }
                 break;
@@ -666,6 +694,16 @@ export default createReactClass({
                             room_id: roomId,
                             deferred_action: payload,
                         });
+                    });
+                }
+                break;
+            case 'sync_state':
+                if (!this.state.matrixClientIsReady) {
+                    this.setState({
+                        matrixClientIsReady: this.context && this.context.isInitialSyncComplete(),
+                    }, () => {
+                        // send another "initial" RVS update to trigger peeking if needed
+                        this._onRoomViewStoreUpdate(true);
                     });
                 }
                 break;
@@ -840,15 +878,6 @@ export default createReactClass({
             this.setState({
                 e2eStatus: "warning",
             });
-            return;
-        }
-        if (!SettingsStore.getValue("feature_cross_signing")) {
-            room.hasUnverifiedDevices().then((hasUnverifiedDevices) => {
-                this.setState({
-                    e2eStatus: hasUnverifiedDevices ? "warning" : "verified",
-                });
-            });
-            debuglog("e2e check is warning/verified only as cross-signing is off");
             return;
         }
 
@@ -1134,7 +1163,7 @@ export default createReactClass({
             ev.dataTransfer.files, this.state.room.roomId, this.context,
         );
         this.setState({ draggingFile: false });
-        dis.dispatch({action: 'focus_composer'});
+        dis.fire(Action.FocusComposer);
     },
 
     onDragLeaveOrEnd: function(ev) {
@@ -1340,7 +1369,7 @@ export default createReactClass({
                 event: null,
             });
         }
-        dis.dispatch({action: 'focus_composer'});
+        dis.fire(Action.FocusComposer);
     },
 
     onLeaveClick: function() {
@@ -1429,9 +1458,7 @@ export default createReactClass({
         // using /leave rather than /join. In the short term though, we
         // just ignore them.
         // https://github.com/vector-im/vector-web/issues/1134
-        dis.dispatch({
-            action: 'view_room_directory',
-        });
+        dis.fire(Action.ViewRoomDirectory);
     },
 
     onSearchClick: function() {
@@ -1451,7 +1478,7 @@ export default createReactClass({
     // jump down to the bottom of this room, where new events are arriving
     jumpToLiveTimeline: function() {
         this._messagePanel.jumpToLiveTimeline();
-        dis.dispatch({action: 'focus_composer'});
+        dis.fire(Action.FocusComposer);
     },
 
     // jump up to wherever our read marker is
@@ -1651,14 +1678,16 @@ export default createReactClass({
         const ErrorBoundary = sdk.getComponent("elements.ErrorBoundary");
 
         if (!this.state.room) {
-            const loading = this.state.roomLoading || this.state.peekLoading;
+            const loading = !this.state.matrixClientIsReady || this.state.roomLoading || this.state.peekLoading;
             if (loading) {
+                // Assume preview loading if we don't have a ready client or a room ID (still resolving the alias)
+                const previewLoading = !this.state.matrixClientIsReady || !this.state.roomId || this.state.peekLoading;
                 return (
                     <div className="mx_RoomView">
                         <ErrorBoundary>
                             <RoomPreviewBar
                                 canPreview={false}
-                                previewLoading={this.state.peekLoading}
+                                previewLoading={previewLoading && !this.state.roomLoadError}
                                 error={this.state.roomLoadError}
                                 loading={loading}
                                 joining={this.state.joining}
@@ -1683,7 +1712,8 @@ export default createReactClass({
                 return (
                     <div className="mx_RoomView">
                         <ErrorBoundary>
-                            <RoomPreviewBar onJoinClick={this.onJoinButtonClicked}
+                            <RoomPreviewBar
+                                onJoinClick={this.onJoinButtonClicked}
                                 onForgetClick={this.onForgetClick}
                                 onRejectClick={this.onRejectThreepidInviteButtonClicked}
                                 canPreview={false} error={this.state.roomLoadError}
@@ -1947,8 +1977,9 @@ export default createReactClass({
                 searchResultsPanel = (<div className="mx_RoomView_messagePanel mx_RoomView_messagePanelSearchSpinner" />);
             } else {
                 searchResultsPanel = (
-                    <ScrollPanel ref={this._searchResultsPanel}
-                        className="mx_RoomView_messagePanel mx_RoomView_searchResultsPanel"
+                    <ScrollPanel
+                        ref={this._searchResultsPanel}
+                        className="mx_RoomView_messagePanel mx_RoomView_searchResultsPanel mx_GroupLayout"
                         onFillRequest={this.onSearchResultsFillRequest}
                         resizeNotifier={this.props.resizeNotifier}
                     >
@@ -1968,6 +1999,13 @@ export default createReactClass({
             highlightedEventId = this.state.initialEventId;
         }
 
+        const messagePanelClassNames = classNames(
+            "mx_RoomView_messagePanel",
+            {
+                "mx_IRCLayout": this.state.useIRCLayout,
+                "mx_GroupLayout": !this.state.useIRCLayout,
+            });
+
         // console.info("ShowUrlPreview for %s is %s", this.state.room.roomId, this.state.showUrlPreview);
         const messagePanel = (
             <TimelinePanel
@@ -1983,11 +2021,12 @@ export default createReactClass({
                 onScroll={this.onMessageListScroll}
                 onReadMarkerUpdated={this._updateTopUnreadMessagesBar}
                 showUrlPreview = {this.state.showUrlPreview}
-                className="mx_RoomView_messagePanel"
+                className={messagePanelClassNames}
                 membersLoaded={this.state.membersLoaded}
                 permalinkCreator={this._getPermalinkCreatorForRoom(this.state.room)}
                 resizeNotifier={this.props.resizeNotifier}
                 showReactions={true}
+                useIRCLayout={this.state.useIRCLayout}
             />);
 
         let topUnreadMessagesBar = null;

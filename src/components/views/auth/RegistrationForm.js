@@ -24,7 +24,10 @@ import * as sdk from '../../../index';
 import * as Email from '../../../email';
 import { _t } from '../../../languageHandler';
 import SdkConfig from '../../../SdkConfig';
+import { SAFE_LOCALPART_REGEX } from '../../../Registration';
 import withValidation from '../elements/Validation';
+import {ValidatedServerConfig} from "../../../utils/AutoDiscoveryUtils";
+import PassphraseField from "./PassphraseField";
 
 const FIELD_EMAIL = 'field_email';
 const FIELD_PASSWORD = 'field_password';
@@ -64,7 +67,6 @@ export default createReactClass({
             password: this.props.defaultPassword || "",
             passwordConfirm: this.props.defaultPassword || "",
             passwordComplexity: null,
-            passwordSafe: false,
         };
     },
 
@@ -209,64 +211,9 @@ export default createReactClass({
         });
     },
 
-    async onPasswordValidate(fieldState) {
-        const result = await this.validatePasswordRules(fieldState);
+    onPasswordValidate(result) {
         this.markFieldValid(FIELD_PASSWORD, result.valid);
-        return result;
     },
-
-    validatePasswordRules: withValidation({
-        description: function() {
-            const complexity = this.state.passwordComplexity;
-            const score = complexity ? complexity.score : 0;
-            return <progress
-                className="mx_AuthBody_passwordScore"
-                max={PASSWORD_MIN_SCORE}
-                value={score}
-            />;
-        },
-        rules: [
-            {
-                key: "required",
-                test: ({ value, allowEmpty }) => allowEmpty || !!value,
-                invalid: () => _t("Enter password"),
-            },
-            {
-                key: "complexity",
-                test: async function({ value }) {
-                    if (!value) {
-                        return false;
-                    }
-                    const { scorePassword } = await import('../../../utils/PasswordScorer');
-                    const complexity = scorePassword(value);
-                    const safe = complexity.score >= PASSWORD_MIN_SCORE;
-                    const allowUnsafe = SdkConfig.get()["dangerously_allow_unsafe_and_insecure_passwords"];
-                    this.setState({
-                        passwordComplexity: complexity,
-                        passwordSafe: safe,
-                    });
-                    return allowUnsafe || safe;
-                },
-                valid: function() {
-                    // Unsafe passwords that are valid are only possible through a
-                    // configuration flag. We'll print some helper text to signal
-                    // to the user that their password is allowed, but unsafe.
-                    if (!this.state.passwordSafe) {
-                        return _t("Password is allowed, but unsafe");
-                    }
-                    return _t("Nice, strong password!");
-                },
-                invalid: function() {
-                    const complexity = this.state.passwordComplexity;
-                    if (!complexity) {
-                        return null;
-                    }
-                    const { feedback } = complexity;
-                    return feedback.warning || feedback.suggestions[0] || _t("Keep going...");
-                },
-            },
-        ],
-    }),
 
     onPasswordConfirmChange(ev) {
         this.setState({
@@ -310,13 +257,10 @@ export default createReactClass({
     },
 
     renderPassword() {
-        const Field = sdk.getComponent('elements.Field');
-        return <Field
+        return <PassphraseField
             id="mx_RegistrationForm_password"
-            ref={field => this[FIELD_PASSWORD] = field}
-            type="password"
-            autoComplete="new-password"
-            label={_t("Password")}
+            fieldRef={field => this[FIELD_PASSWORD] = field}
+            minScore={PASSWORD_MIN_SCORE}
             value={this.state.password}
             onChange={this.onPasswordChange}
             onValidate={this.onPasswordValidate}

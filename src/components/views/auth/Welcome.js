@@ -44,7 +44,8 @@ export default class Welcome extends React.PureComponent {
             idBaseUrl: "https://matrix.agent.tchap.gouv.fr",
         });
         const plaf = PlatformPeg.get();
-        const callbackUrl = plaf.getSSOCallbackUrl(tmpClient.getHomeserverUrl(), tmpClient.getIdentityServerUrl());
+        const callbackUrl = plaf.getSSOCallbackUrl(tmpClient.getHomeserverUrl(), tmpClient.getIdentityServerUrl(),
+            this.props.fragmentAfterLogin);
 
         return (
             <AuthPage>

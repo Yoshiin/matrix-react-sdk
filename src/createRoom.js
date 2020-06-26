@@ -19,11 +19,12 @@ import {MatrixClientPeg} from './MatrixClientPeg';
 import Modal from './Modal';
 import * as sdk from './index';
 import { _t } from './languageHandler';
-import dis from "./dispatcher";
+import dis from "./dispatcher/dispatcher";
 import * as Rooms from "./Rooms";
 import DMRoomMap from "./utils/DMRoomMap";
 import {getAddressType} from "./UserAddress";
-import SettingsStore from "./settings/SettingsStore";
+
+const E2EE_WK_KEY = "im.vector.riot.e2ee";
 
 /**
  * Create a new room, and switch to it.
@@ -130,6 +131,16 @@ export default function createRoom(opts) {
             state_key: '',
         },
     ];
+
+    if (opts.encryption) {
+        createOpts.initial_state.push({
+            type: 'm.room.encryption',
+            state_key: '',
+            content: {
+                algorithm: 'm.megolm.v1.aes-sha2',
+            },
+        });
+    }
 
     let modal;
     if (opts.spinner) modal = Modal.createDialog(Loader, null, 'mx_Dialog_spinner');
@@ -247,13 +258,23 @@ export async function ensureDMExists(client, userId) {
         roomId = existingDMRoom.roomId;
     } else {
         let encryption;
-        if (SettingsStore.getValue("feature_cross_signing")) {
+        if (privateShouldBeEncrypted()) {
             encryption = canEncryptToAllUsers(client, [userId]);
         }
         roomId = await createRoom({encryption, dmUserId: userId, spinner: false, andView: false});
         await _waitForMember(client, roomId, userId);
     }
     return roomId;
+}
+
+export function privateShouldBeEncrypted() {
+    const clientWellKnown = MatrixClientPeg.get().getClientWellKnown();
+    if (clientWellKnown && clientWellKnown[E2EE_WK_KEY]) {
+        const defaultDisabled = clientWellKnown[E2EE_WK_KEY]["default"] === false;
+        return !defaultDisabled;
+    }
+
+    return true;
 }
 
 function _generateRandomString(len) {

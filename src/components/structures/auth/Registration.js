@@ -30,6 +30,8 @@ import classNames from "classnames";
 import * as Lifecycle from '../../../Lifecycle';
 import {MatrixClientPeg} from "../../../MatrixClientPeg";
 import AuthPage from "../../views/auth/AuthPage";
+import Login from "../../../Login";
+import dis from "../../../dispatcher";
 import Tchap from "../../../tchap/Tchap";
 
 // Phases
@@ -163,10 +165,14 @@ export default createReactClass({
             });
         };
         try {
-            await this._makeRegisterRequest({});
-            // This should never succeed since we specified an empty
-            // auth object.
-            console.log("Expecting 401 from register request but got success!");
+            // We do the first registration request ourselves to discover whether we need to
+            // do SSO instead. If we've already started the UI Auth process though, we don't
+            // need to.
+            if (!this.state.doingUIAuth) {
+                await this._makeRegisterRequest(null);
+                // This should never succeed since we specified no auth object.
+                console.log("Expecting 401 from register request but got success!");
+            }
         } catch (e) {
             if (e.httpStatus === 401) {
                 this.setState({

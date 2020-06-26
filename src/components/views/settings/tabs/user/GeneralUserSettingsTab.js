@@ -30,7 +30,7 @@ import PlatformPeg from "../../../../../PlatformPeg";
 import {MatrixClientPeg} from "../../../../../MatrixClientPeg";
 import * as sdk from "../../../../..";
 import Modal from "../../../../../Modal";
-import dis from "../../../../../dispatcher";
+import dis from "../../../../../dispatcher/dispatcher";
 import {Service, startTermsFlow} from "../../../../../Terms";
 import {SERVICE_TYPES} from "matrix-js-sdk";
 import IdentityAuthClient from "../../../../../IdentityAuthClient";
@@ -38,6 +38,7 @@ import {abbreviateUrl} from "../../../../../utils/UrlUtils";
 import { getThreepidsWithBindStatus } from '../../../../../boundThreepids';
 import LabelledToggleSwitch from "../../../elements/LabelledToggleSwitch";
 import Tchap from '../../../../../tchap/Tchap';
+import Spinner from "../../../elements/Spinner";
 
 export default class GeneralUserSettingsTab extends React.Component {
     static propTypes = {
@@ -91,39 +92,6 @@ export default class GeneralUserSettingsTab extends React.Component {
 
     componentWillUnmount() {
         dis.unregister(this.dispatcherRef);
-    }
-
-    _calculateThemeState() {
-        // We have to mirror the logic from ThemeWatcher.getEffectiveTheme so we
-        // show the right values for things.
-
-        const themeChoice = SettingsStore.getValueAt(SettingLevel.ACCOUNT, "theme");
-        const systemThemeExplicit = SettingsStore.getValueAt(
-            SettingLevel.DEVICE, "use_system_theme", null, false, true);
-        const themeExplicit = SettingsStore.getValueAt(
-            SettingLevel.DEVICE, "theme", null, false, true);
-
-        // If the user has enabled system theme matching, use that.
-        if (systemThemeExplicit) {
-            return {
-                theme: themeChoice,
-                useSystemTheme: true,
-            };
-        }
-
-        // If the user has set a theme explicitly, use that (no system theme matching)
-        if (themeExplicit) {
-            return {
-                theme: themeChoice,
-                useSystemTheme: false,
-            };
-        }
-
-        // Otherwise assume the defaults for the settings
-        return {
-            theme: themeChoice,
-            useSystemTheme: SettingsStore.getValueAt(SettingLevel.DEVICE, "use_system_theme"),
-        };
     }
 
     _onAction = (payload) => {

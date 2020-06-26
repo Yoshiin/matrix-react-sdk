@@ -21,7 +21,7 @@ import React, {createRef} from 'react';
 import PropTypes from 'prop-types';
 import createReactClass from 'create-react-class';
 import classNames from 'classnames';
-import dis from '../../../dispatcher';
+import dis from '../../../dispatcher/dispatcher';
 import {MatrixClientPeg} from '../../../MatrixClientPeg';
 import DMRoomMap from '../../../utils/DMRoomMap';
 import * as sdk from '../../../index';
@@ -33,9 +33,10 @@ import RoomViewStore from '../../../stores/RoomViewStore';
 import SettingsStore from "../../../settings/SettingsStore";
 import {_t} from "../../../languageHandler";
 import {RovingTabIndexWrapper} from "../../../accessibility/RovingTabIndex";
+import InviteOnlyIcon from './InviteOnlyIcon';
 // eslint-disable-next-line camelcase
 import rate_limited_func from '../../../ratelimitedfunc';
-import {shieldStatusForRoom} from '../../../utils/ShieldUtils';
+import { shieldStatusForRoom } from '../../../utils/ShieldUtils';
 import Tchap from "../../../tchap/Tchap";
 
 export default createReactClass({
@@ -152,9 +153,6 @@ export default createReactClass({
     _updateE2eStatus: async function() {
         const cli = MatrixClientPeg.get();
         if (!cli.isRoomEncrypted(this.props.room.roomId)) {
-            return;
-        }
-        if (!SettingsStore.getValue("feature_cross_signing")) {
             return;
         }
 
@@ -500,7 +498,6 @@ export default createReactClass({
                     <div title={name} className={nameClasses} tabIndex={-1} dir="auto">{badge}{name}</div>
                     {roomType}
                 </div>);
-
         } else if (this.state.hover) {
             const Tooltip = sdk.getComponent("elements.Tooltip");
             tooltip = <Tooltip className="mx_RoomTile_tooltip" label={this.props.room.name} dir="auto" />;
@@ -561,11 +558,9 @@ export default createReactClass({
         }
 
         let privateIcon = null;
-        /*if (SettingsStore.getValue("feature_cross_signing")) {
-            if (this.state.joinRule == "invite" && !dmUserId) {
-                privateIcon = <InviteOnlyIcon collapsedPanel={this.props.collapsed} />;
-            }
-        }*/
+        if (this.state.joinRule === "invite" && !dmUserId) {
+            privateIcon = <InviteOnlyIcon collapsedPanel={this.props.collapsed} />;
+        }
 
         let e2eIcon = null;
         /*if (this.state.e2eStatus) {

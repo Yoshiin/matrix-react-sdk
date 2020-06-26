@@ -29,6 +29,7 @@ import ThemeController from './controllers/ThemeController';
 import PushToMatrixClientController from './controllers/PushToMatrixClientController';
 import ReloadOnChangeController from "./controllers/ReloadOnChangeController";
 import {RIGHT_PANEL_PHASES} from "../stores/RightPanelStorePhases";
+import FontSizeController from './controllers/FontSizeController';
 
 // These are just a bunch of helper arrays to avoid copy/pasting a bunch of times
 const LEVELS_ROOM_SETTINGS = ['device', 'room-device', 'room-account', 'account', 'config'];
@@ -94,6 +95,12 @@ export const SETTINGS = {
     //     // not use this for new settings.
     //     invertedSettingName: "my-negative-setting",
     // },
+    "feature_font_scaling": {
+        isFeature: true,
+        displayName: _td("Font scaling"),
+        supportedLevels: LEVELS_FEATURE,
+        default: false,
+    },
     "feature_pinning": {
         isFeature: true,
         displayName: _td("Message Pinning"),
@@ -131,11 +138,24 @@ export const SETTINGS = {
         supportedLevels: LEVELS_FEATURE,
         default: false,
     },
+    "feature_new_room_list": {
+        isFeature: true,
+        displayName: _td("Use the improved room list (in development - will refresh to apply changes)"),
+        supportedLevels: LEVELS_FEATURE,
+        default: false,
+        controller: new ReloadOnChangeController(),
+    },
     "feature_custom_themes": {
         isFeature: true,
         displayName: _td("Support adding custom themes"),
         supportedLevels: LEVELS_FEATURE,
         default: false,
+    },
+    "feature_irc_ui": {
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
+        displayName: _td('Use IRC layout'),
+        default: false,
+        isFeature: true,
     },
     "mjolnirRooms": {
         supportedLevels: ['account'],
@@ -145,17 +165,21 @@ export const SETTINGS = {
         supportedLevels: ['account'],
         default: null,
     },
-    "feature_cross_signing": {
-        // XXX: We shouldn't be using the feature prefix for non-feature settings. There is an exception
-        // for this case though as we're converting a feature to a setting for a temporary safety net.
-        displayName: _td("Enable cross-signing to verify per-user instead of per-session"),
-        supportedLevels: ['device', 'config'], // we shouldn't use LEVELS_FEATURE for non-features, so copy it here.
-        default: false,
-    },
     "feature_bridge_state": {
         isFeature: true,
         supportedLevels: LEVELS_FEATURE,
         displayName: _td("Show info about bridges in room settings"),
+        default: false,
+    },
+    "baseFontSize": {
+        displayName: _td("Font size"),
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
+        default: 10,
+        controller: new FontSizeController(),
+    },
+    "useCustomFontSize": {
+        displayName: _td("Custom font size"),
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         default: false,
     },
     "MessageComposerInput.suggestEmoji": {
@@ -167,7 +191,7 @@ export const SETTINGS = {
     "useCompactLayout": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td('Use compact timeline layout'),
-        default: true,
+        default: false,
     },
     "showRedactions": {
         supportedLevels: LEVELS_ROOM_SETTINGS_WITH_ROOM,
@@ -518,5 +542,12 @@ export const SETTINGS = {
         controller: new PushToMatrixClientController(
             MatrixClient.prototype.setCryptoTrustCrossSignedDevices, true,
         ),
+    },
+    "ircDisplayNameWidth": {
+        // We specifically want to have room-device > device so that users may set a device default
+        // with a per-room override.
+        supportedLevels: ['room-device', 'device'],
+        displayName: _td("IRC display name width"),
+        default: 80,
     },
 };

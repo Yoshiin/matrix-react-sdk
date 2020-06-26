@@ -290,6 +290,33 @@ export default class EventIndex extends EventEmitter {
         return validEventType && validMsgType && hasContentValue;
     }
 
+    eventToJson(ev) {
+        const jsonEvent = ev.toJSON();
+        const e = ev.isEncrypted() ? jsonEvent.decrypted : jsonEvent;
+
+        if (ev.isEncrypted()) {
+            // Let us store some additional data so we can re-verify the event.
+            // The js-sdk checks if an event is encrypted using the algorithm,
+            // the sender key and ed25519 signing key are used to find the
+            // correct device that sent the event which allows us to check the
+            // verification state of the event, either directly or using cross
+            // signing.
+            e.curve25519Key = ev.getSenderKey();
+            e.ed25519Key = ev.getClaimedEd25519Key();
+            e.algorithm = ev.getWireContent().algorithm;
+            e.forwardingCurve25519KeyChain = ev.getForwardingCurve25519KeyChain();
+        } else {
+            // Make sure that unencrypted events don't contain any of that data,
+            // despite what the server might give to us.
+            delete e.curve25519Key;
+            delete e.ed25519Key;
+            delete e.algorithm;
+            delete e.forwardingCurve25519KeyChain;
+        }
+
+        return e;
+    }
+
     /**
      * Queue up live events to be added to the event index.
      *
@@ -300,8 +327,7 @@ export default class EventIndex extends EventEmitter {
 
         if (!this.isValidEvent(ev)) return;
 
-        const jsonEvent = ev.toJSON();
-        const e = ev.isEncrypted() ? jsonEvent.decrypted : jsonEvent;
+        const e = this.eventToJson(ev);
 
         const profile = {
             displayname: ev.sender.rawDisplayName,
@@ -405,7 +431,7 @@ export default class EventIndex extends EventEmitter {
                     continue;
                 }
 
-                console.log("EventIndex: Error crawling events:", e);
+                console.log("EventIndex: Error crawling using checkpoint:", checkpoint, ",", e);
                 this.crawlerCheckpoints.push(checkpoint);
                 continue;
             }
@@ -477,8 +503,7 @@ export default class EventIndex extends EventEmitter {
             // Let us convert the events back into a format that EventIndex can
             // consume.
             const events = filteredEvents.map((ev) => {
-                const jsonEvent = ev.toJSON();
-                const e = ev.isEncrypted() ? jsonEvent.decrypted : jsonEvent;
+                const e = this.eventToJson(ev);
 
                 let profile = {};
                 if (e.sender in profiles) profile = profiles[e.sender];
@@ -489,23 +514,44 @@ export default class EventIndex extends EventEmitter {
                 return object;
             });
 
-            // Create a new checkpoint so we can continue crawling the room for
-            // messages.
-            const newCheckpoint = {
-                roomId: checkpoint.roomId,
-                token: res.end,
-                fullCrawl: checkpoint.fullCrawl,
-                direction: checkpoint.direction,
-            };
+            let newCheckpoint;
+
+            // The token can be null for some reason. Don't create a checkpoint
+            // in that case since adding it to the db will fail.
+            if (res.end) {
+                // Create a new checkpoint so we can continue crawling the room
+                // for messages.
+                newCheckpoint = {
+                    roomId: checkpoint.roomId,
+                    token: res.end,
+                    fullCrawl: checkpoint.fullCrawl,
+                    direction: checkpoint.direction,
+                };
+            }
 
             try {
                 for (let i = 0; i < redactionEvents.length; i++) {
                     const ev = redactionEvents[i];
-                    await indexManager.deleteEvent(ev.getAssociatedId());
+                    const eventId = ev.getAssociatedId();
+
+                    if (eventId) {
+                        await indexManager.deleteEvent(eventId);
+                    } else {
+                        console.warn("EventIndex: Redaction event doesn't contain a valid associated event id", ev);
+                    }
                 }
 
                 const eventsAlreadyAdded = await indexManager.addHistoricEvents(
                     events, newCheckpoint, checkpoint);
+
+                // We didn't get a valid new checkpoint from the server, nothing
+                // to do here anymore.
+                if (!newCheckpoint) {
+                    console.log("EventIndex: The server didn't return a valid ",
+                                "new checkpoint, not continuing the crawl.", checkpoint);
+                    continue;
+                }
+
                 // If all events were already indexed we assume that we catched
                 // up with our index and don't need to crawl the room further.
                 // Let us delete the checkpoint in that case, otherwise push

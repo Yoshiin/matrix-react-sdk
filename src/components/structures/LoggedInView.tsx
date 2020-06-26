@@ -27,11 +27,10 @@ import PageTypes from '../../PageTypes';
 import CallMediaHandler from '../../CallMediaHandler';
 import { fixupColorFonts } from '../../utils/FontManager';
 import * as sdk from '../../index';
-import dis from '../../dispatcher';
+import dis from '../../dispatcher/dispatcher';
 import sessionStore from '../../stores/SessionStore';
-import {MatrixClientPeg, MatrixClientCreds} from '../../MatrixClientPeg';
+import {MatrixClientPeg, IMatrixClientCreds} from '../../MatrixClientPeg';
 import SettingsStore from "../../settings/SettingsStore";
-import RoomListStore from "../../stores/RoomListStore";
 
 import TagOrderActions from '../../actions/TagOrderActions';
 import RoomListActions from '../../actions/RoomListActions';
@@ -42,6 +41,19 @@ import * as KeyboardShortcuts from "../../accessibility/KeyboardShortcuts";
 import HomePage from "./HomePage";
 import ResizeNotifier from "../../utils/ResizeNotifier";
 import PlatformPeg from "../../PlatformPeg";
+import { RoomListStoreTempProxy } from "../../stores/room-list/RoomListStoreTempProxy";
+import { DefaultTagID } from "../../stores/room-list/models";
+import {
+    showToast as showSetPasswordToast,
+    hideToast as hideSetPasswordToast
+} from "../../toasts/SetPasswordToast";
+import {
+    showToast as showServerLimitToast,
+    hideToast as hideServerLimitToast
+} from "../../toasts/ServerLimitToast";
+import { Action } from "../../dispatcher/actions";
+import LeftPanel2 from "./LeftPanel2";
+
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
 // NB. this is just for server notices rather than pinned messages in general.
@@ -56,7 +68,7 @@ function canElementReceiveInput(el) {
 
 interface IProps {
     matrixClient: MatrixClient;
-    onRegistered: (credentials: MatrixClientCreds) => Promise<MatrixClient>;
+    onRegistered: (credentials: IMatrixClientCreds) => Promise<MatrixClient>;
     viaServers?: string[];
     hideToSRUsers: boolean;
     resizeNotifier: ResizeNotifier;
@@ -64,10 +76,6 @@ interface IProps {
     initialEventPixelOffset: number;
     leftDisabled: boolean;
     rightDisabled: boolean;
-    showCookieBar: boolean;
-    hasNewVersion: boolean;
-    userHasGeneratedPassword: boolean;
-    showNotifierToolbar: boolean;
     page_type: string;
     autoJoin: boolean;
     thirdPartyInvite?: object;
@@ -75,7 +83,6 @@ interface IProps {
     currentRoomId: string;
     ConferenceHandler?: object;
     collapseLhs: boolean;
-    checkingForUpdate: boolean;
     config: {
         piwik: {
             policyUrl: string;
@@ -85,19 +92,26 @@ interface IProps {
     currentUserId?: string;
     currentGroupId?: string;
     currentGroupIsNew?: boolean;
-    version?: string;
-    newVersion?: string;
-    newVersionReleaseNotes?: string;
 }
+
+interface IUsageLimit {
+    limit_type: "monthly_active_user" | string;
+    admin_contact?: string;
+}
+
 interface IState {
     mouseDown?: {
         x: number;
         y: number;
     };
-    syncErrorData: any;
+    syncErrorData?: {
+        error: {
+            data: IUsageLimit;
+            errcode: string;
+        };
+    };
+    usageLimitEventContent?: IUsageLimit;
     useCompactLayout: boolean;
-    serverNoticeEvents: MatrixEvent[];
-    userHasGeneratedPassword: boolean;
 }
 
 /**
@@ -140,11 +154,8 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         this.state = {
             mouseDown: undefined,
             syncErrorData: undefined,
-            userHasGeneratedPassword: false,
             // use compact timeline view
             useCompactLayout: SettingsStore.getValue('useCompactLayout'),
-            // any currently active server notice events
-            serverNoticeEvents: [],
         };
 
         // stash the MatrixClient in case we log out before we are unmounted
@@ -178,18 +189,6 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         this._loadResizerPreferences();
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        // attempt to guess when a banner was opened or closed
-        if (
-            (prevProps.showCookieBar !== this.props.showCookieBar) ||
-            (prevProps.hasNewVersion !== this.props.hasNewVersion) ||
-            (prevState.userHasGeneratedPassword !== this.state.userHasGeneratedPassword) ||
-            (prevProps.showNotifierToolbar !== this.props.showNotifierToolbar)
-        ) {
-            this.props.resizeNotifier.notifyBannersChanged();
-        }
-    }
-
     componentWillUnmount() {
         document.removeEventListener('keydown', this._onNativeKeyDown, false);
         this._matrixClient.removeListener("accountData", this.onAccountData);
@@ -219,9 +218,11 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
     };
 
     _setStateFromSessionStore = () => {
-        this.setState({
-            userHasGeneratedPassword: Boolean(this._sessionStore.getCachedPassword()),
-        });
+        if (this._sessionStore.getCachedPassword()) {
+            showSetPasswordToast();
+        } else {
+            hideSetPasswordToast();
+        }
     };
 
     _createResizer() {
@@ -293,22 +294,37 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
 
         if (oldSyncState === 'PREPARED' && syncState === 'SYNCING') {
             this._updateServerNoticeEvents();
+        } else {
+            this._calculateServerLimitToast(this.state.syncErrorData, this.state.usageLimitEventContent);
         }
     };
 
     onRoomStateEvents = (ev, state) => {
-        const roomLists = RoomListStore.getRoomLists();
-        if (roomLists['m.server_notice'] && roomLists['m.server_notice'].some(r => r.roomId === ev.getRoomId())) {
+        const roomLists = RoomListStoreTempProxy.getRoomLists();
+        if (roomLists[DefaultTagID.ServerNotice] && roomLists[DefaultTagID.ServerNotice].some(r => r.roomId === ev.getRoomId())) {
             this._updateServerNoticeEvents();
         }
     };
 
-    _updateServerNoticeEvents = async () => {
-        const roomLists = RoomListStore.getRoomLists();
-        if (!roomLists['m.server_notice']) return [];
+    _calculateServerLimitToast(syncErrorData: IState["syncErrorData"], usageLimitEventContent?: IUsageLimit) {
+        const error = syncErrorData && syncErrorData.error && syncErrorData.error.errcode === "M_RESOURCE_LIMIT_EXCEEDED";
+        if (error) {
+            usageLimitEventContent = syncErrorData.error.data;
+        }
 
-        const pinnedEvents = [];
-        for (const room of roomLists['m.server_notice']) {
+        if (usageLimitEventContent) {
+            showServerLimitToast(usageLimitEventContent.limit_type, usageLimitEventContent.admin_contact, error);
+        } else {
+            hideServerLimitToast();
+        }
+    }
+
+    _updateServerNoticeEvents = async () => {
+        const roomLists = RoomListStoreTempProxy.getRoomLists();
+        if (!roomLists[DefaultTagID.ServerNotice]) return [];
+
+        const events = [];
+        for (const room of roomLists[DefaultTagID.ServerNotice]) {
             const pinStateEvent = room.currentState.getStateEvents("m.room.pinned_events", "");
 
             if (!pinStateEvent || !pinStateEvent.getContent().pinned) continue;
@@ -317,12 +333,19 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
             for (const eventId of pinnedEventIds) {
                 const timeline = await this._matrixClient.getEventTimeline(room.getUnfilteredTimelineSet(), eventId, 0);
                 const event = timeline.getEvents().find(ev => ev.getId() === eventId);
-                if (event) pinnedEvents.push(event);
+                if (event) events.push(event);
             }
         }
-        this.setState({
-            serverNoticeEvents: pinnedEvents,
+
+        const usageLimitEvent = events.find((e) => {
+            return (
+                e && e.getType() === 'm.room.message' &&
+                e.getContent()['server_notice_type'] === 'm.server_notice.usage_limit_reached'
+            );
         });
+        const usageLimitEventContent = usageLimitEvent && usageLimitEvent.getContent();
+        this._calculateServerLimitToast(this.state.syncErrorData, usageLimitEventContent);
+        this.setState({ usageLimitEventContent });
     };
 
     _onPaste = (ev) => {
@@ -337,7 +360,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
             // refocusing during a paste event will make the
             // paste end up in the newly focused element,
             // so dispatch synchronously before paste happens
-            dis.dispatch({action: 'focus_composer'}, true);
+            dis.fire(Action.FocusComposer, true);
         }
     };
 
@@ -429,9 +452,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                 // composer, so CTRL+` it is
 
                 if (ctrlCmdOnly) {
-                    dis.dispatch({
-                        action: 'toggle_top_left_menu',
-                    });
+                    dis.fire(Action.ToggleUserMenu);
                     handled = true;
                 }
                 break;
@@ -487,7 +508,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
 
             if (!isClickShortcut && ev.key !== Key.TAB && !canElementReceiveInput(ev.target)) {
                 // synchronous dispatch so we focus before key generates input
-                dis.dispatch({action: 'focus_composer'}, true);
+                dis.fire(Action.FocusComposer, true);
                 ev.stopPropagation();
                 // we should *not* preventDefault() here as
                 // that would prevent typing in the now-focussed composer
@@ -598,12 +619,6 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         const GroupView = sdk.getComponent('structures.GroupView');
         const MyGroups = sdk.getComponent('structures.MyGroups');
         const ToastContainer = sdk.getComponent('structures.ToastContainer');
-        const MatrixToolbar = sdk.getComponent('globals.MatrixToolbar');
-        const CookieBar = sdk.getComponent('globals.CookieBar');
-        const NewVersionBar = sdk.getComponent('globals.NewVersionBar');
-        const UpdateCheckBar = sdk.getComponent('globals.UpdateCheckBar');
-        const PasswordNagBar = sdk.getComponent('globals.PasswordNagBar');
-        const ServerLimitBar = sdk.getComponent('globals.ServerLimitBar');
 
         let pageElement;
 
@@ -647,48 +662,23 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                 break;
         }
 
-        const usageLimitEvent = this.state.serverNoticeEvents.find((e) => {
-            return (
-                e && e.getType() === 'm.room.message' &&
-                e.getContent()['server_notice_type'] === 'm.server_notice.usage_limit_reached'
-            );
-        });
-
-        let topBar;
-        if (this.state.syncErrorData && this.state.syncErrorData.error.errcode === 'M_RESOURCE_LIMIT_EXCEEDED') {
-            topBar = <ServerLimitBar kind='hard'
-                adminContact={this.state.syncErrorData.error.data.admin_contact}
-                limitType={this.state.syncErrorData.error.data.limit_type}
-            />;
-        } else if (usageLimitEvent) {
-            topBar = <ServerLimitBar kind='soft'
-                adminContact={usageLimitEvent.getContent().admin_contact}
-                limitType={usageLimitEvent.getContent().limit_type}
-            />;
-        } else if (this.props.showCookieBar &&
-            this.props.config.piwik &&
-            navigator.doNotTrack !== "1"
-        ) {
-            const policyUrl = this.props.config.piwik.policyUrl || null;
-            topBar = <CookieBar policyUrl={policyUrl} />;
-        } else if (this.props.hasNewVersion) {
-            topBar = <NewVersionBar version={this.props.version} newVersion={this.props.newVersion}
-                                    releaseNotes={this.props.newVersionReleaseNotes}
-            />;
-        } else if (this.props.checkingForUpdate) {
-            topBar = <UpdateCheckBar {...this.props.checkingForUpdate} />;
-        } else if (this.state.userHasGeneratedPassword) {
-            topBar = <PasswordNagBar />;
-        } else if (this.props.showNotifierToolbar) {
-            topBar = <MatrixToolbar />;
-        }
-
         let bodyClasses = 'mx_MatrixChat';
-        if (topBar) {
-            bodyClasses += ' mx_MatrixChat_toolbarShowing';
-        }
         if (this.state.useCompactLayout) {
             bodyClasses += ' mx_MatrixChat_useCompactLayout';
+        }
+
+        let leftPanel = (
+            <LeftPanel
+                resizeNotifier={this.props.resizeNotifier}
+                collapsed={this.props.collapseLhs || false}
+                disabled={this.props.leftDisabled}
+            />
+        );
+        if (SettingsStore.isFeatureEnabled("feature_new_room_list")) {
+            // TODO: Supply props like collapsed and disabled to LeftPanel2
+            leftPanel = (
+                <LeftPanel2 isMinimized={this.props.collapseLhs || false} />
+            );
         }
 
         return (
@@ -701,15 +691,10 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                     onMouseDown={this._onMouseDown}
                     onMouseUp={this._onMouseUp}
                 >
-                    { topBar }
                     <ToastContainer />
                     <DragDropContext onDragEnd={this._onDragEnd}>
                         <div ref={this._resizeContainer} className={bodyClasses}>
-                            <LeftPanel
-                                resizeNotifier={this.props.resizeNotifier}
-                                collapsed={this.props.collapseLhs || false}
-                                disabled={this.props.leftDisabled}
-                            />
+                            { leftPanel }
                             <ResizeHandle />
                             { pageElement }
                         </div>

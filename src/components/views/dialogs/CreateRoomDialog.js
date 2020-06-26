@@ -25,6 +25,7 @@ import { _t } from '../../../languageHandler';
 import {MatrixClientPeg} from '../../../MatrixClientPeg';
 import {Key} from "../../../Keyboard";
 import SettingsStore from "../../../settings/SettingsStore";
+import {privateShouldBeEncrypted} from "../../../createRoom";
 
 export default createReactClass({
     displayName: 'CreateRoomDialog',
@@ -37,7 +38,7 @@ export default createReactClass({
         const config = SdkConfig.get();
         return {
             isPublic: this.props.defaultPublic || false,
-            isEncrypted: true,
+            isEncrypted: privateShouldBeEncrypted(),
             name: "",
             topic: "",
             alias: "",
@@ -57,6 +58,9 @@ export default createReactClass({
             createOpts.visibility = "public";
             createOpts.preset = "public_chat";
             opts.guestAccess = false;
+            const {alias} = this.state;
+            const localPart = alias.substr(1, alias.indexOf(":") - 1);
+            createOpts['room_alias_name'] = localPart;
         }
         if (this.state.externAllowed && !this.state.isPublic) {
             createOpts.access_rules = "unrestricted"
@@ -68,7 +72,7 @@ export default createReactClass({
             createOpts.creation_content = {'m.federate': false};
         }
 
-        if (!this.state.isPublic && SettingsStore.getValue("feature_cross_signing")) {
+        if (!this.state.isPublic) {
             opts.encryption = this.state.isEncrypted;
         }
 
@@ -76,17 +80,13 @@ export default createReactClass({
     },
 
     componentDidMount() {
-        if (this._detailsRef) {
-            this._detailsRef.addEventListener("toggle", this.onDetailsToggled);
-        }
+        this._detailsRef.addEventListener("toggle", this.onDetailsToggled);
         // move focus to first field when showing dialog
         this._nameFieldRef.focus();
     },
 
     componentWillUnmount() {
-        if (this._detailsRef) {
-            this._detailsRef.removeEventListener("toggle", this.onDetailsToggled);
-        }
+        this._detailsRef.removeEventListener("toggle", this.onDetailsToggled);
     },
 
     _onKeyDown: function(event) {
