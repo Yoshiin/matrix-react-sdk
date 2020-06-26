@@ -406,7 +406,6 @@ export default class RoomSubList extends React.PureComponent {
                             { incomingCall }
                         </AccessibleButton>
                         { badge }
-                        { addRoomButton }
                     </div>
                 );
             } }

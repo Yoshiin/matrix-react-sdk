@@ -20,12 +20,11 @@
 
 .mx_RoomHeader_avatar_unrestricted {
     background-image: url('$(res)/img/cccccc.png');
-    background-repeat: no-repeat;
     background-position: center;
     -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     flex: unset;
-    padding: 4px 4px 4px 4px;
+    padding: 2px;
 }
 
 .mx_RoomHeader_accessibility {
@@ -44,7 +43,6 @@
 
 .mx_RoomTile_avatar_unrestricted {
     background-image: url('$(res)/img/cccccc.png');
-    background-repeat: no-repeat;
     background-position: center;
     -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
@@ -185,7 +183,7 @@
     position: relative;
     width: 100%;
     height: 20px;
-    margin: 30px -50px 0 20px;
+    margin: 30px -55px 0 20px;
     overflow: hidden;
     text-align: right;
     color: #dddddd;
@@ -207,6 +205,14 @@
     margin-right: 19px;
     margin-top: -76px;
     z-index: 1;
+}
+
+.tc_LeftPanel_Button_cross_btn {
+    width: 58px;
+    height: 58px;
+    background-image: url('$(res)/img/tchap/btn-cross_blue.svg');
+    background-repeat: no-repeat;
+    background-position: top;
 }
 
 .mx_RoomList > .mx_RoomSubList:last-child {
@@ -478,4 +484,49 @@
     font-size: inherit;
     padding: 0 15px;
     margin-top: 13px;
+}
+
+.mx_ResizeHandle.mx_ResizeHandle_horizontal > div {
+    width: 0;
+}
+
+.mx_EventTile_avatar > .mx_BaseAvatar > .mx_BaseAvatar_initial {
+    z-index: 0;
+}
+
+.tc_PlusContextMenu {
+    height: 104px;
+    color: #dddddd;
+    background-color: #273d64;
+    box-shadow: 2px 15px 30px 0 rgba(0, 0, 0, 0.48);
+    border-radius: 4px;
+    overflow-y: auto;
+    visibility: visible;
+    opacity: 1;
+    transition: visibility 0s, opacity 0.3s linear;
+    z-index: 101;
+}
+
+.tc_PlusContextMenu_sub_item {
+    padding: 7px 17px 7px 15px;
+    cursor: pointer;
+    &:hover {
+        background-color: #35496e;
+    }
+}
+
+.tc_PlusContextMenu_sub_img {
+    width: 12px;
+    margin-right: 10px;
+    margin-bottom: -2px;
+}
+
+.tc_PlusContextMenu_sub_separator {
+    margin-top: 0;
+    margin-bottom: 0;
+    border-bottom-style: none;
+    border-left-style: none;
+    border-right-style: none;
+    border-top-style: solid;
+    border-top-width: 1px;
 }

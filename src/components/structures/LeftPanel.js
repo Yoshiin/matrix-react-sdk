@@ -27,6 +27,7 @@ import SettingsStore from '../../settings/SettingsStore';
 import {_t} from "../../languageHandler";
 import Analytics from "../../Analytics";
 import SdkConfig from "../../SdkConfig";
+import PlusContextMenu from "../../tchap/PlusContextMenu";
 
 
 const LeftPanel = createReactClass({
@@ -42,6 +43,7 @@ const LeftPanel = createReactClass({
         return {
             searchFilter: '',
             breadcrumbs: false,
+            plusContextMenuVisible: false,
         };
     },
 
@@ -138,6 +140,15 @@ const LeftPanel = createReactClass({
                 this._onMoveFocus(ev, false, true);
                 break;
         }
+    },
+
+    _onPlusClicked: function(e) {
+        console.error("Clicked")
+        this.setState({
+            plusContextMenuVisible: true,
+            plusContextMenuX: e.clientX,
+            plusContextMenuY: e.clientY,
+        })
     },
 
     _onMoveFocus: function(ev, up, trap) {
@@ -257,25 +268,19 @@ const LeftPanel = createReactClass({
             );
         }
 
-        const cross = (
-            <AccessibleButton className="tc_LeftPanel_Button_cross" onClick={this._onClearClick} >
-                <img src={require('../../../res/img/tchap/btn-cross_blue.svg')} alt="+" width={58} height={58}/>
-            </AccessibleButton>
-        );
-
         let bottomPanel;
         if (!this.props.collapsed) {
             bottomPanel = (
                 <div className="tc_LeftPanel_Bottom">
-                    <div className={"tc_LeftPanel_Bottom_logo"}>
+                    <div className="tc_LeftPanel_Bottom_logo">
                         <img src={require('../../../res/img/tchap/logo_rep_fr.svg')} alt="logo_rep_fr" />
                     </div>
-                    <div className={"tc_LeftPanel_Bottom_links"}>
+                    <div className="tc_LeftPanel_Bottom_links">
                         <a href={SdkConfig.get().base_host_url + SdkConfig.get().generic_endpoints.faq} rel='noreferrer nofollow noopener' target='_blank'>{_t('FAQ')}</a>&nbsp;·&nbsp;
                         <a href={SdkConfig.get().base_host_url + SdkConfig.get().generic_endpoints.tac} rel='noreferrer nofollow noopener' target='_blank'>{_t('TAC')}</a>&nbsp;·&nbsp;
                         <a href={SdkConfig.get().base_host_url + SdkConfig.get().generic_endpoints.user_guide} rel='noreferrer nofollow noopener' target='_blank'>{_t('User Guide')}</a>
                     </div>
-                    { cross }
+                    <PlusContextMenu />
                 </div>
             );
         }
@@ -305,7 +310,6 @@ const LeftPanel = createReactClass({
                     { breadcrumbs }
                     <CallPreview ConferenceHandler={VectorConferenceHandler} />
                     <div className="mx_LeftPanel_exploreAndFilterRow" onKeyDown={this._onKeyDown} onFocus={this._onFocus} onBlur={this._onBlur}>
-                        { exploreButton }
                         { searchBox }
                     </div>
                     <RoomList

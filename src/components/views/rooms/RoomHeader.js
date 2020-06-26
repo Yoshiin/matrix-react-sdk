@@ -247,7 +247,18 @@ export default createReactClass({
         }
         const topicElement =
             <div className="mx_RoomHeader_topic" ref={this._topic} title={topic} dir="auto">{ topic }</div>;
-        const avatarSize = 44;
+        let avatarSize = 44;
+        let memberCount = null;
+        let mainAvatarClasses = "mx_RoomHeader_avatar";
+        if (!dmUserId) {
+            mainAvatarClasses += " mx_RoomHeader_avatar_room";
+            if (Tchap.getAccessRules(this.props.room.roomId) === "unrestricted") {
+                avatarSize = 40;
+                mainAvatarClasses += " mx_RoomHeader_avatar_unrestricted"
+            }
+            memberCount = (<div className="tc_RoomHeader_memberCount">{ `${this.props.room.getJoinedMemberCount()} ${_t("Members")}` }</div>);
+        }
+
         let roomAvatar;
         if (this.props.room) {
             roomAvatar = (<RoomAvatar
@@ -325,16 +336,6 @@ export default createReactClass({
         let encryptedIndicator = null;
         if (MatrixClientPeg.get().isRoomEncrypted(this.props.room.roomId)) {
             encryptedIndicator = <img src={require("../../../../res/img/tchap/padlock-encrypted_bordered-white.svg")} width="15" height="19" alt="encrypted" className="tc_RoomHeader_encryptionInfos" />;
-        }
-
-        let memberCount = null;
-        let mainAvatarClasses = "mx_RoomHeader_avatar";
-        if (!dmUserId) {
-            mainAvatarClasses += " mx_RoomHeader_avatar_room";
-            if (Tchap.getAccessRules(this.props.room.roomId) === "unrestricted") {
-                mainAvatarClasses += " mx_RoomHeader_avatar_unrestricted"
-            }
-            memberCount = (<div className="tc_RoomHeader_memberCount">{ `${this.props.room.getJoinedMemberCount()} ${_t("Members")}` }</div>);
         }
 
         const rightRow =

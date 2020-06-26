@@ -20,13 +20,18 @@ import * as Roles from './Roles';
 import {isValid3pidInvite} from "./RoomInvite";
 import SettingsStore from "./settings/SettingsStore";
 import {ALL_RULE_TYPES, ROOM_RULE_TYPES, SERVER_RULE_TYPES, USER_RULE_TYPES} from "./mjolnir/BanList";
+import Tchap from "./tchap/Tchap";
 
 function textForMemberEvent(ev) {
     // XXX: SYJS-16 "sender is sometimes null for join messages"
     const senderName = ev.sender ? ev.sender.name : ev.getSender();
-    const targetName = ev.target ? ev.target.name : ev.getStateKey();
+    let targetName = ev.target ? ev.target.name : ev.getStateKey();
     const prevContent = ev.getPrevContent();
     const content = ev.getContent();
+
+    if (Tchap.looksLikeMxId(targetName)) {
+        targetName = Tchap.computeDisplayNameFromUserId(targetName);
+    }
 
     const ConferenceHandler = CallHandler.getConferenceHandler();
     const reason = content.reason ? (_t('Reason') + ': ' + content.reason) : '';

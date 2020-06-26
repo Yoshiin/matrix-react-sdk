@@ -152,6 +152,43 @@ export default class Tchap {
     }
 
     /**
+     *
+     * @param str
+     * @returns {boolean}
+     */
+    static looksLikeMxId(str) {
+        return !!(str.startsWith("@") && str.includes(":"));
+    }
+
+    /**
+     *
+     * @param userId
+     * @returns {*}
+     */
+    static computeDisplayNameFromUserId(userId) {
+        let dn = "";
+        let reg = new RegExp('\\d*$');
+        let targetTmp = userId.split(":")[0];
+        targetTmp = targetTmp.replace("@", "");
+        targetTmp = targetTmp.replace(reg.exec(targetTmp), "");
+        dn = targetTmp;
+        if (this.isUserExtern(userId)) {
+            if (targetTmp.lastIndexOf("-") !== -1) {
+                dn = targetTmp.substring(0, targetTmp.lastIndexOf("-")) + "@" + targetTmp.substring(targetTmp.lastIndexOf("-") + 1);
+            }
+        } else {
+            let userPart = targetTmp.substring(0, targetTmp.lastIndexOf("-"));
+            userPart = userPart.replace(".", " ");
+            dn = ((u) => {
+                return u.split(" ").map(d => {
+                    return this._capitalize(d)
+                }).join(" ");
+            })(userPart);
+        }
+        return dn;
+    }
+
+    /**
      * Lookup using the proxied API.
      * @param {string} medium
      * @param {string} address
