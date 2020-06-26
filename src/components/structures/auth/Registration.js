@@ -23,15 +23,11 @@ import createReactClass from 'create-react-class';
 import PropTypes from 'prop-types';
 import * as sdk from '../../../index';
 import { _t, _td } from '../../../languageHandler';
-import SdkConfig from '../../../SdkConfig';
 import { messageForResourceLimitError } from '../../../utils/ErrorUtils';
-import * as ServerType from '../../views/auth/ServerTypeSelector';
 import classNames from "classnames";
 import * as Lifecycle from '../../../Lifecycle';
 import {MatrixClientPeg} from "../../../MatrixClientPeg";
 import AuthPage from "../../views/auth/AuthPage";
-import Login from "../../../Login";
-import dis from "../../../dispatcher";
 import Tchap from "../../../tchap/Tchap";
 
 // Phases

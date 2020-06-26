@@ -1,7 +1,7 @@
 import React from 'react';
 import AccessibleButton from "../components/views/elements/AccessibleButton";
 import createReactClass from "create-react-class";
-import dis from "../dispatcher";
+import dis from "../dispatcher/dispatcher";
 import {_t} from "../languageHandler";
 
 const PlusContextMenu = createReactClass({

@@ -22,9 +22,7 @@ import * as sdk from '../../../index';
 import SdkConfig from '../../../SdkConfig';
 import withValidation from '../elements/Validation';
 import { _t } from '../../../languageHandler';
-import {MatrixClientPeg} from '../../../MatrixClientPeg';
 import {Key} from "../../../Keyboard";
-import SettingsStore from "../../../settings/SettingsStore";
 import {privateShouldBeEncrypted} from "../../../createRoom";
 
 export default createReactClass({
@@ -80,13 +78,7 @@ export default createReactClass({
     },
 
     componentDidMount() {
-        this._detailsRef.addEventListener("toggle", this.onDetailsToggled);
-        // move focus to first field when showing dialog
         this._nameFieldRef.focus();
-    },
-
-    componentWillUnmount() {
-        this._detailsRef.removeEventListener("toggle", this.onDetailsToggled);
     },
 
     _onKeyDown: function(event) {
