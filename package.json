@@ -71,7 +71,7 @@
     "fuse.js": "^2.2.0",
     "gfm.css": "^1.1.1",
     "glob-to-regexp": "^0.4.1",
-    "highlight.js": "^9.15.8",
+    "highlight.js": "^10.1.2",
     "html-entities": "^1.2.1",
     "is-ip": "^2.0.0",
     "linkifyjs": "^2.1.6",
